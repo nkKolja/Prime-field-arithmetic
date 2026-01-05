@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  test:
+    name: Test ${{ matrix.prime }}
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        prime: [test_p64_0, test_p64_1, test_p128_0, test_p128_1, test_p192_0, test_p192_1, test_p256_0, test_p256_1, test_p512_0, test_p512_1]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential g++
+      
+      - name: Build and test ${{ matrix.prime }}
+        run: make ${{ matrix.prime }} && ./build/${{ matrix.prime }}
+
