@@ -134,7 +134,7 @@ void mul(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
     constexpr size_t NWORDS = Prime::NWORDS;
     constexpr size_t NBITS = Prime::NBITS;
     const auto& p = Prime::p;
-    constexpr digit_t pp_0 = (Prime::pp)[0];
+    constexpr digit_t pp_0 = (Prime::pp)[NWORDS - 1];
 
     if constexpr (NBITS <= NWORDS * RADIX - 1) {
         std::array<digit_t, NWORDS + 1> temp_c{};
