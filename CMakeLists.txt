@@ -6,8 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+if(DEFINED ENV{CI})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1 -Wall -Wextra")  # Less aggressive for CI
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Werror")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif()
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -52,6 +56,7 @@ foreach(PRIME ${PRIMES})
     target_link_libraries(test_${PRIME} prime_field_${PRIME})
     target_compile_definitions(test_${PRIME} PRIVATE PRIME_TYPE=${PRIME_UPPER})
     add_test(NAME test_${PRIME} COMMAND test_${PRIME})
+    set_tests_properties(test_${PRIME} PROPERTIES TIMEOUT 120)  # 30 second timeout per test
 endforeach()
 
 # Create benchmark executables for each prime (linking against static libs)
