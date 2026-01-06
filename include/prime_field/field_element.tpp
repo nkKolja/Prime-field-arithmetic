@@ -38,30 +38,30 @@ void reduce_full(FieldElement<Prime>& a) {
     if constexpr (num_trailing_bits == 0) {
         reduce(a);
         return;
+    } else {
+        digit_t trailing_value = a.data[NWORDS - 1] >> (RADIX - num_trailing_bits);
+        a.data[NWORDS - 1] &= ((digit_t)1 << (RADIX - num_trailing_bits)) - 1;
+        
+        std::array<digit_t, NWORDS> temp_0;
+        std::array<digit_t, NWORDS> temp_1;
+        digit_t carry;
+
+        for (size_t i = 0; i < NWORDS; i++) {
+            MUL(temp_1[i], temp_0[i], TWO_POW_NBITS[i], trailing_value);
+        }
+
+        carry = 0;
+        for (size_t i = 1; i < NWORDS; i++) {
+            ADDC(temp_0[i], temp_0[i], temp_1[i-1], carry);
+        }
+
+        carry = 0;
+        for (size_t i = 0; i < NWORDS; i++) {
+            ADDC(a.data[i], a.data[i], temp_0[i], carry);
+        }
+
+        reduce(a);
     }
-
-    digit_t trailing_value = a.data[NWORDS - 1] >> (RADIX - num_trailing_bits);
-    a.data[NWORDS - 1] &= ((digit_t)1 << (RADIX - num_trailing_bits)) - 1;
-    
-    std::array<digit_t, NWORDS> temp_0;
-    std::array<digit_t, NWORDS> temp_1;
-    digit_t carry;
-
-    for (size_t i = 0; i < NWORDS; i++) {
-        MUL(temp_1[i], temp_0[i], TWO_POW_NBITS[i], trailing_value);
-    }
-
-    carry = 0;
-    for (size_t i = 1; i < NWORDS; i++) {
-        ADDC(temp_0[i], temp_0[i], temp_1[i-1], carry);
-    }
-
-    carry = 0;
-    for (size_t i = 0; i < NWORDS; i++) {
-        ADDC(a.data[i], a.data[i], temp_0[i], carry);
-    }
-
-    reduce(a);
 }
 
 // Modular addition: out = (in1 + in2) mod p
