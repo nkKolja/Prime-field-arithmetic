@@ -2,19 +2,19 @@
 #include <vector>
 #include <cstring>
 #include <cstdlib>
-#include "field_element.hpp"
+#include "prime_field/field_element.hpp"
 
 // Include all prime definitions
-#include "primes/p64_0.hpp"
-#include "primes/p64_1.hpp"
-#include "primes/p128_0.hpp"
-#include "primes/p128_1.hpp"
-#include "primes/p192_0.hpp"
-#include "primes/p192_1.hpp"
-#include "primes/p256_0.hpp"
-#include "primes/p256_1.hpp"
-#include "primes/p512_0.hpp"
-#include "primes/p512_1.hpp"
+#include "prime_field/primes/p64_0.hpp"
+#include "prime_field/primes/p64_1.hpp"
+#include "prime_field/primes/p128_0.hpp"
+#include "prime_field/primes/p128_1.hpp"
+#include "prime_field/primes/p192_0.hpp"
+#include "prime_field/primes/p192_1.hpp"
+#include "prime_field/primes/p256_0.hpp"
+#include "prime_field/primes/p256_1.hpp"
+#include "prime_field/primes/p512_0.hpp"
+#include "prime_field/primes/p512_1.hpp"
 
 using namespace prime_field;
 
@@ -53,12 +53,12 @@ const char* pass_check(bool arr[], int n) {
 }
 
 template<typename Prime>
-void run_tests() {
+int run_tests() {
     using F = FieldElement<Prime>;
     
     const char *function_names[] = {"f_red", "f_add", "f_neg", "f_sub", "f_mul", "f_leg", "f_inv", "f_sqr"};
-    bool tests[NUM_TESTS][256] = {0};
-    int result = 0;
+    bool tests[NUM_TESTS][256] = {{0}};
+    int result = 0, first_leg = 0;
 
     // Allocate test vectors
     std::vector<F> t0(TEST_LOOPS);
@@ -66,23 +66,10 @@ void run_tests() {
     std::vector<F> t2(TEST_LOOPS);
 
     // Generate random values
-    srand(14); // Fixed seed for reproducibility
     for(int i = 0; i < TEST_LOOPS; i++) {
-        for(size_t j = 0; j < Prime::NWORDS; j++) {
-            t0[i].data[j] = ((uint64_t)rand() << 32) | rand();
-            t1[i].data[j] = ((uint64_t)rand() << 32) | rand();
-            t2[i].data[j] = ((uint64_t)rand() << 32) | rand();
-        }
-        if(Prime::NWORDS * RADIX != Prime::NBITS){
-            size_t excess_bits = Prime::NWORDS * RADIX - Prime::NBITS;
-            digit_t mask = (digit_t(1) << (RADIX - excess_bits)) - 1;
-            t0[i].data[Prime::NWORDS - 1] &= mask;
-            t1[i].data[Prime::NWORDS - 1] &= mask;
-            t2[i].data[Prime::NWORDS - 1] &= mask;
-        }
-        reduce(t0[i]);
-        reduce(t1[i]);
-        reduce(t2[i]);
+        t0[i] = random<Prime>();
+        t1[i] = random<Prime>();
+        t2[i] = random<Prime>();
     }
 
     // Special values
@@ -104,7 +91,7 @@ void run_tests() {
     F p_elem;
     p_elem.data = Prime::p;
 
-    std::cout << "Running tests for prime field\n\n";
+    std::cout << "\n";
 
     for(int i = 0; i < TEST_LOOPS; i++) {
         F s0, s1, s2;
@@ -214,7 +201,6 @@ void run_tests() {
         if(t0[i] != zero_elem && t1[i] != zero_elem)
             tests[5][1] |= ((l[0] * l[1] * l[2]) != 1);
 
-        int first_leg;
         if(i == 0) first_leg = l[0];
         tests[5][2] |= (first_leg != l[0]) | (first_leg != l[1]) | (first_leg != l[2]);
         if(i == TEST_LOOPS - 1) tests[5][2] = !tests[5][2];
@@ -256,6 +242,8 @@ void run_tests() {
         std::cout << "✔ All tests passed!\n\n";
     else
         std::cout << "✗ Some tests failed!\n\n";
+    
+    return result;
 }
 
 #define STRINGIFY(x) #x
@@ -263,13 +251,14 @@ void run_tests() {
 
 int main() {
 #ifdef PRIME_TYPE
+    std::cout << "\n";
+    std::cout << "===================\n";
     std::cout << "Testing " << TOSTRING(PRIME_TYPE) << "\n";
-    std::cout << "========================\n";
     
-    run_tests<PRIME_TYPE>();
+    int result = run_tests<PRIME_TYPE>();
+    std::cout << "\n";
+    return result;
 #else
     #error "PRIME_TYPE must be defined (e.g., -DPRIME_TYPE=P64_0)"
 #endif
-
-    return 0;
 }

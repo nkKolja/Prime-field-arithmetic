@@ -3,7 +3,7 @@
 #include <array>
 #include <iostream>
 #include <iomanip>
-#include "types.hpp"
+#include "../types.hpp"
 
 namespace prime_field {
 
@@ -50,7 +50,29 @@ std::array<digit_t, N>& array_truncate(std::array<digit_t, M>& arr) {
     return *reinterpret_cast<std::array<digit_t, N>*>(arr.data());
 }
 
-/// MULTIPLICATION HELPERS ///
+// Conditional select: c = (cond) ? b : a (constant-time)
+template<size_t N>
+void conditional_select(std::array<digit_t, N>& out, const std::array<digit_t, N>& in1, const std::array<digit_t, N>& in2, bool cond) {
+    digit_t mask = static_cast<digit_t>(-(digit_t)cond);
+    
+    for (size_t i = 0; i < N; i++) {
+        out[i] = (in1[i] & ~mask) | (in2[i] & mask);
+    }
+}
+
+// Conditional swap: swaps a and b if cond != 0 (constant-time)
+template<size_t N>
+void cond_swap(std::array<digit_t, N>& a, std::array<digit_t, N>& b, bool cond) {
+    digit_t mask = static_cast<digit_t>(-(digit_t)cond);
+    
+    for (size_t i = 0; i < N; i++) {
+        digit_t temp = mask & (a[i] ^ b[i]);
+        a[i] ^= temp;
+        b[i] ^= temp;
+    }
+}
+
+/// ADDITION HELPERS ///
 
 // Adds two N-word vectors
 // Input: in1 (N words), in2 (M words)
@@ -122,37 +144,21 @@ void mp_sub_no_borrow(std::array<digit_t, N>& out, const std::array<digit_t, N>&
 // Output: out (N words) = if ( in1 >= in2 ) { in1 - in2 } else { in1 }
 // Assumes output fits in N words
 template<size_t N, size_t M>
-void mp_sub_conditional_NM(std::array<digit_t, N>& out, const std::array<digit_t, M>& in1, const std::array<digit_t, N>& in2) {
+void mp_sub_conditional(std::array<digit_t, N>& out, const std::array<digit_t, M>& in1, const std::array<digit_t, N>& in2) {
     static_assert(N <= M, "Cannot subtract larger from smaller");
-    digit_t mask, borrow, carry, temp;
-    
-    borrow = 0;
-    for (size_t i = 0; i < N; i++) {
-        SUBC(out[i], in1[i], in2[i], borrow);
-    }
-    for (size_t i = N; i < M; i++) {
-        SUBC(temp, in1[i], 0, borrow);
-    }
-
-    mask = 0 - borrow;
-    carry = 0;
-    for (size_t i = 0; i < N; i++) {
-        ADDC(out[i], out[i], in2[i] & mask, carry);
-    }
-}
-
-
-// Subtracts two N-word vectors and corrects in case of underflow
-// Input: in1 (K words), in2 (M words)
-// Output: out (N words) = if ( in1 >= in2 ) { in1 - in2 } else { in1 }
-template<size_t N>
-void mp_sub_conditional(std::array<digit_t, N>& out, const std::array<digit_t, N>& in1, const std::array<digit_t, N>& in2) {
     digit_t mask, borrow, carry;
     
     borrow = 0;
     for (size_t i = 0; i < N; i++) {
         SUBC(out[i], in1[i], in2[i], borrow);
     }
+    
+    if constexpr (N < M) {
+        digit_t temp;
+        for (size_t i = N; i < M; i++) {
+            SUBC(temp, in1[i], 0, borrow);
+        }
+    }
 
     mask = 0 - borrow;
     carry = 0;
@@ -160,6 +166,7 @@ void mp_sub_conditional(std::array<digit_t, N>& out, const std::array<digit_t, N
         ADDC(out[i], out[i], in2[i] & mask, carry);
     }
 }
+
 
 /// MULTIPLICATION HELPERS ///
 

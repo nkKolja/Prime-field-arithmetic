@@ -4,8 +4,10 @@
 // This file is included at the end of field_element.hpp
 
 #include <array>
+#include <stdexcept>
 #include "types.hpp"
-#include "helpers.hpp"
+#include "detail/helpers.hpp"
+#include "detail/random.hpp"
 
 namespace prime_field {
 
@@ -31,7 +33,6 @@ void reduce_full(FieldElement<Prime>& a) {
     constexpr size_t NWORDS = Prime::NWORDS;
     constexpr size_t num_trailing_bits = NWORDS * RADIX - Prime::NBITS;
     constexpr auto& TWO_POW_NBITS = Prime::TWO_POW_NBITS;
-    digit_t mask, borrow, carry;
 
     // If no trailing bits, just reduce and return
     if constexpr (num_trailing_bits == 0) {
@@ -44,6 +45,7 @@ void reduce_full(FieldElement<Prime>& a) {
     
     std::array<digit_t, NWORDS> temp_0;
     std::array<digit_t, NWORDS> temp_1;
+    digit_t carry;
 
     for (size_t i = 0; i < NWORDS; i++) {
         MUL(temp_1[i], temp_0[i], TWO_POW_NBITS[i], trailing_value);
@@ -133,7 +135,6 @@ void mul(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
     constexpr size_t NBITS = Prime::NBITS;
     const auto& p = Prime::p;
     constexpr digit_t pp_0 = (Prime::pp)[0];
-    digit_t mask, carry, borrow;
 
     if constexpr (NBITS <= NWORDS * RADIX - 1) {
         std::array<digit_t, NWORDS + 1> temp_c{};
@@ -167,57 +168,124 @@ void mul(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
             mp_add_and_divide(temp_c, temp_c, temp_0);
         }
 
-        mp_sub_conditional_NM(out.data, temp_c, p);
+        mp_sub_conditional(out.data, temp_c, p);
     }
 }
 
 
-// Exponentiation: result = a^exp mod p
-template<typename Prime>
-void pow(FieldElement<Prime>& result, const FieldElement<Prime>& a, const std::array<digit_t, Prime::NWORDS>& exp) {
-    constexpr size_t N = Prime::NWORDS;
+
+
+// Exponentiation: result = a^exp mod p (constant-time Montgomery ladder)
+template<typename Prime, size_t N>
+void pow(FieldElement<Prime>& result, const FieldElement<Prime>& a, const std::array<digit_t, N>& exp) {
+    FieldElement<Prime> t0, t1;
     
-    // Initialize result to 1 (in Montgomery form: R mod p)
-    result.data = Prime::Mont_one;
+    t0.data = Prime::Mont_one;
+    t1 = a;
     
-    FieldElement<Prime> base = a;
+    digit_t bit = 0;
+    digit_t prevbit = 0;
     
-    // Square-and-multiply
-    for (size_t i = 0; i < N; i++) {
-        digit_t e = exp[i];
-        for (size_t j = 0; j < 64; j++) {
-            if (e & 1) {
-                mul(result, base, result);
-            }
-            mul(base, base, base);
-            e >>= 1;
+    // Process bits from most significant to least significant
+    for (int i = N - 1; i >= 0; i--) {
+        for (int j = 63; j >= 0; j--) {
+            bit = (exp[i] >> j) & 0x01;
+            
+            cond_swap(t0.data, t1.data, bit ^ prevbit);
+            
+            mul(t1, t0, t1);  // t1 = t0 * t1
+            mul(t0, t0, t0);  // t0 = t0 * t0
+            
+            prevbit = bit;
         }
     }
+    
+    cond_swap(t0.data, t1.data, prevbit);
+    
+    result = t0;
 }
 
 template<typename Prime>
 void inv(FieldElement<Prime>& b, const FieldElement<Prime>& a) {
     // Fermat's little theorem: a^(p-2) mod p
-    constexpr size_t N = Prime::NWORDS;
-    const auto& p = Prime::p;
-    
-    // Compute p - 2
-    std::array<digit_t, N> p_minus_2 = p;
-    digit_t borrow = 2;
-    for (size_t i = 0; i < N; i++) {
-        uint128_t diff = static_cast<uint128_t>(p_minus_2[i]) - borrow;
-        p_minus_2[i] = static_cast<digit_t>(diff);
-        borrow = static_cast<digit_t>(diff >> 127);
-        if (borrow == 0) break;
-    }
-    
-    pow(b, a, p_minus_2);
+    pow<Prime, Prime::NWORDS>(b, a, Prime::pm2);
 }
 
+
+// Multiplication over Fp2
+// Fp[x]/(x^2 - non_residue)
+// a = a[0] + a[1] * x
 template<typename Prime>
-void sqrt(FieldElement<Prime>& b, const FieldElement<Prime>& a) {
-    // TODO: Implement Tonelli-Shanks
-    b = a;
+void mul_fp2(
+    std::array<FieldElement<Prime>, 2>& out,
+    const std::array<FieldElement<Prime>, 2>& in1,
+    const std::array<FieldElement<Prime>, 2>& in2,
+    const FieldElement<Prime>& non_residue) {
+    FieldElement<Prime> t0, t1, t2;
+
+    add(t0, in1[0], in1[1]);
+    add(t1, in2[0], in2[1]);
+
+    mul(t2, t0, t1);
+
+    mul(t0, in1[0], in2[0]);
+    mul(t1, in1[1], in2[1]);
+
+    sub(t2, t2, t0);
+    sub(out[1], t2, t1);
+
+    mul(t1, t1, non_residue);
+
+    add(out[0], t0, t1);
+}
+
+// Cipolla's square root finding algorithm
+template<typename Prime>
+void sqrt(FieldElement<Prime>& out, const FieldElement<Prime>& in) {
+    FieldElement<Prime> a = {};
+    FieldElement<Prime> non_residue = {};
+    FieldElement<Prime> one = {};
+    one.data = Prime::Mont_one;
+
+    neg(non_residue, in);
+
+    while (legendre(non_residue) != -1) {
+        add(a, a, one);
+        add(non_residue, non_residue, a);
+        add(non_residue, non_residue, a);
+        sub(non_residue, non_residue, one);
+    }
+
+    std::array<FieldElement<Prime>, 2> t0 = {};
+    std::array<FieldElement<Prime>, 2> t1 = {};
+    std::array<digit_t, Prime::NWORDS> exp = Prime::pp1_half;
+
+    t0[0].data = Prime::Mont_one;
+    t1[0] = a;
+    t1[1] = one;
+
+
+    digit_t bit = 0;
+    digit_t prevbit = 0;
+    
+    for (int i = Prime::NWORDS - 1; i >= 0; i--) {
+        for (int j = RADIX - 1; j >= 0; j--) {
+            bit = (exp[i] >> j) & 0x01;
+            
+            cond_swap(t0[0].data, t1[0].data, bit ^ prevbit);
+            cond_swap(t0[1].data, t1[1].data, bit ^ prevbit);
+            
+            mul_fp2(t1, t0, t1, non_residue);  // t1 = t0 * t1
+            mul_fp2(t0, t0, t0, non_residue);  // t0 = t0 * t0
+            
+            prevbit = bit;
+        }
+    }
+    
+    cond_swap(t0[0].data, t1[0].data, prevbit);
+    cond_swap(t0[1].data, t1[1].data, prevbit);
+    
+    out = t0[0];
 }
 
 // Returns the Legendre symbol (a|p)
@@ -227,20 +295,8 @@ void sqrt(FieldElement<Prime>& b, const FieldElement<Prime>& a) {
 template<typename Prime>
 int legendre(const FieldElement<Prime>& a) {
     // Legendre symbol: a^((p-1)/2) mod p
-    constexpr size_t N = Prime::NWORDS;
-    const auto& p = Prime::p;
-
-    // Compute (p - 1) / 2
-    std::array<digit_t, N> leg_exp = p;
-    for (size_t i = 0; i < N; i++) {
-        leg_exp[i] >>= 1;
-    }
-    for (size_t i = 0; i < N - 1; i++) {
-        leg_exp[i] |= (p[i + 1] & 0x01) << (RADIX - 1);
-    }
-
     FieldElement<Prime> result;
-    pow(result, a, leg_exp);
+    pow<Prime, Prime::NWORDS>(result, a, Prime::pm1_half);
     
     FieldElement<Prime> one(1);
     FieldElement<Prime> minus_one = -one;
@@ -256,21 +312,25 @@ int legendre(const FieldElement<Prime>& a) {
 }
 
 template<typename Prime>
-FieldElement<Prime> random() {
-    // TODO: Implement with secure RNG
-    // For now, placeholder
-    return FieldElement<Prime>();
+bool random(FieldElement<Prime>& out) noexcept {
+    if (detail::randombytes(out.data.data(),
+        Prime::NWORDS * sizeof(digit_t)) != 0)
+        return false;
+
+    reduce_full(out);
+    return true;
 }
 
 template<typename Prime>
-void conditional_select(const FieldElement<Prime>& a, const FieldElement<Prime>& b, FieldElement<Prime>& c, uint8_t cond) {
-    constexpr size_t N = Prime::NWORDS;
-    digit_t mask = static_cast<digit_t>(-(digit_t)cond);
-    
-    for (size_t i = 0; i < N; i++) {
-        c.data[i] = (a.data[i] & ~mask) | (b.data[i] & mask);
-    }
+FieldElement<Prime> random() {
+    FieldElement<Prime> r;
+
+    if (!random(r))
+        std::terminate();
+
+    return r;
 }
+
 
 template<typename Prime>
 FieldElement<Prime> to_montgomery(const std::array<digit_t, Prime::NWORDS>& value) {

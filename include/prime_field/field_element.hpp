@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iomanip>
 #include "types.hpp"
-#include "helpers.hpp"
+#include "detail/helpers.hpp"
 
 namespace prime_field {
 
@@ -18,11 +18,12 @@ template<typename Prime> void mul(FieldElement<Prime>& out, const FieldElement<P
 template<typename Prime> void div(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2);
 template<typename Prime> void neg(FieldElement<Prime>& out, const FieldElement<Prime>& in);
 template<typename Prime> void inv(FieldElement<Prime>& out, const FieldElement<Prime>& in);
-template<typename Prime> void pow(FieldElement<Prime>& out, const FieldElement<Prime>& in, const std::array<digit_t, Prime::NWORDS>& exp);
+template<typename Prime, size_t N> void pow(FieldElement<Prime>& out, const FieldElement<Prime>& in, const std::array<digit_t, N>& exp);
 template<typename Prime> void sqrt(FieldElement<Prime>& out, const FieldElement<Prime>& in);
 template<typename Prime> int legendre(const FieldElement<Prime>& a);
 template<typename Prime> FieldElement<Prime> random();
 template<typename Prime> void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, FieldElement<Prime>& in2, bool cond);
+template<typename Prime> void conditional_swap(FieldElement<Prime>& out, const FieldElement<Prime>& in1, FieldElement<Prime>& in2, bool cond);
 template<typename Prime> FieldElement<Prime> to_montgomery(const std::array<digit_t, Prime::NWORDS>& value);
 template<typename Prime> std::array<digit_t, Prime::NWORDS> from_montgomery(const FieldElement<Prime>& a);
 
@@ -51,6 +52,7 @@ public:
     }
 
     constexpr FieldElement(const FieldElement& other) = default;
+    constexpr FieldElement& operator=(const FieldElement& other) = default;
     
     // Arithmetic operators
     FieldElement operator+(const FieldElement& other) const {

@@ -6,24 +6,24 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
-#include "../include/field_element.hpp"
+#include "../include/prime_field/field_element.hpp"
 
 // Include all prime definitions
-#include "../include/primes/p64_0.hpp"
-#include "../include/primes/p64_1.hpp"
-#include "../include/primes/p128_0.hpp"
-#include "../include/primes/p128_1.hpp"
-#include "../include/primes/p192_0.hpp"
-#include "../include/primes/p192_1.hpp"
-#include "../include/primes/p256_0.hpp"
-#include "../include/primes/p256_1.hpp"
-#include "../include/primes/p512_0.hpp"
-#include "../include/primes/p512_1.hpp"
+#include "../include/prime_field/primes/p64_0.hpp"
+#include "../include/prime_field/primes/p64_1.hpp"
+#include "../include/prime_field/primes/p128_0.hpp"
+#include "../include/prime_field/primes/p128_1.hpp"
+#include "../include/prime_field/primes/p192_0.hpp"
+#include "../include/prime_field/primes/p192_1.hpp"
+#include "../include/prime_field/primes/p256_0.hpp"
+#include "../include/prime_field/primes/p256_1.hpp"
+#include "../include/prime_field/primes/p512_0.hpp"
+#include "../include/prime_field/primes/p512_1.hpp"
 
 using namespace prime_field;
 
-#define WARMUP      15000
-#define BENCH_LOOPS 15000
+#define WARMUP      5000
+#define BENCH_LOOPS 5000
 #define BATCH       1000  // Operations per timing measurement
 
 // Volatile sink prevents compiler from optimizing away function calls

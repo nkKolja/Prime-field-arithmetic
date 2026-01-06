@@ -14,7 +14,12 @@ TEST_BINS = $(addprefix $(BUILD_DIR)/test_,$(PRIMES))
 BENCH_BINS = $(addprefix $(BUILD_DIR)/bench_,$(PRIMES))
 
 # Dependencies
-DEPS = include/field_element.hpp include/field_element.tpp include/primes.hpp include/helpers.hpp include/types.hpp
+DEPS = include/prime_field/field_element.hpp \
+       include/prime_field/field_element.tpp \
+       include/prime_field/params.hpp \
+       include/prime_field/types.hpp \
+       include/prime_field/detail/helpers.hpp \
+       $(wildcard include/prime_field/primes/*.hpp)
 
 all: test_all
 
