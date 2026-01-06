@@ -183,9 +183,9 @@ void pow(FieldElement<Prime>& result, const FieldElement<Prime>& a, const std::a
     FieldElement<Prime> base = a;
     
     // Square-and-multiply
-    for (size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; i++) {
         digit_t e = exp[i];
-        for (size_t j = 0; j < 64; ++j) {
+        for (size_t j = 0; j < 64; j++) {
             if (e & 1) {
                 mul(result, base, result);
             }
@@ -204,7 +204,7 @@ void inv(FieldElement<Prime>& b, const FieldElement<Prime>& a) {
     // Compute p - 2
     std::array<digit_t, N> p_minus_2 = p;
     digit_t borrow = 2;
-    for (size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; i++) {
         uint128_t diff = static_cast<uint128_t>(p_minus_2[i]) - borrow;
         p_minus_2[i] = static_cast<digit_t>(diff);
         borrow = static_cast<digit_t>(diff >> 127);
@@ -239,33 +239,20 @@ int legendre(const FieldElement<Prime>& a) {
         leg_exp[i] |= (p[i + 1] & 0x01) << (RADIX - 1);
     }
 
-
-
     FieldElement<Prime> result;
     pow(result, a, leg_exp);
     
-    // Check if result is 0, 1, or p-1
-    bool is_zero = true;
-    for (size_t i = 0; i < N; ++i) {
-        if (result.data[i] != 0) {
-            is_zero = false;
-            break;
-        }
-    }
-    if (is_zero) return 0;
-
-    if (result.data[0] == 1) {
-        bool is_one = true;
-        for (size_t i = 1; i < N; ++i) {
-            if (result.data[i] != 0) {
-                is_one = false;
-                break;
-            }
-        }
-        if (is_one) return 1;
-    }
-
-    return -1;
+    FieldElement<Prime> one(1);
+    FieldElement<Prime> minus_one = -one;
+    
+    int is_one = result == one;
+    int is_minus_one = result == minus_one;
+    
+    int ret_one = 1 & -is_one;
+    int ret_minus_one = -is_minus_one;
+    int retval = ret_one | ret_minus_one;
+    
+    return retval;
 }
 
 template<typename Prime>
@@ -280,7 +267,7 @@ void conditional_select(const FieldElement<Prime>& a, const FieldElement<Prime>&
     constexpr size_t N = Prime::NWORDS;
     digit_t mask = static_cast<digit_t>(-(digit_t)cond);
     
-    for (size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; i++) {
         c.data[i] = (a.data[i] & ~mask) | (b.data[i] & mask);
     }
 }

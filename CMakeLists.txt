@@ -19,15 +19,28 @@ target_include_directories(prime_field INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-# Tests (will add later)
-# enable_testing()
-# add_executable(test tests/test.cpp)
-# target_link_libraries(test prime_field)
-# add_test(NAME ArithmeticTests COMMAND test)
+# List of all primes
+set(PRIMES p64_0 p64_1 p128_0 p128_1 p192_0 p192_1 p256_0 p256_1 p512_0 p512_1)
 
-# Benchmarks (will add later)
-# add_executable(bench benchmarks/bench.cpp)
-# target_link_libraries(bench prime_field)
+# Enable testing
+enable_testing()
+
+# Create test executables for each prime
+foreach(PRIME ${PRIMES})
+    string(TOUPPER ${PRIME} PRIME_UPPER)
+    add_executable(test_${PRIME} tests/tests.cpp)
+    target_link_libraries(test_${PRIME} prime_field)
+    target_compile_definitions(test_${PRIME} PRIVATE PRIME_TYPE=${PRIME_UPPER})
+    add_test(NAME test_${PRIME} COMMAND test_${PRIME})
+endforeach()
+
+# Create benchmark executables for each prime
+foreach(PRIME ${PRIMES})
+    string(TOUPPER ${PRIME} PRIME_UPPER)
+    add_executable(bench_${PRIME} benchmarks/bench.cpp)
+    target_link_libraries(bench_${PRIME} prime_field)
+    target_compile_definitions(bench_${PRIME} PRIVATE PRIME_TYPE=${PRIME_UPPER})
+endforeach()
 
 # Print configuration
 message(STATUS "Build configuration:")

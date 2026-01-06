@@ -61,7 +61,7 @@ public:
     FieldElement& operator+=(const FieldElement& other) {
         FieldElement result;
         add(result, *this, other);
-        return result;
+        return *this = result;;
     }
 
     FieldElement operator-() const {
@@ -78,7 +78,7 @@ public:
     FieldElement& operator-=(const FieldElement& other) {
         FieldElement result;
         sub(result, *this, other);
-        return result;
+        return *this = result;;
     }
 
     FieldElement operator*(const FieldElement& other) const {
@@ -89,7 +89,7 @@ public:
     FieldElement& operator*=(const FieldElement& other) {
         FieldElement result;
         mul(result, *this, other);
-        return result;
+        return *this = result;
     }
 
     

@@ -3,11 +3,22 @@
 #include <cstring>
 #include <cstdlib>
 #include "field_element.hpp"
-#include "primes.hpp"
+
+// Include all prime definitions
+#include "primes/p64_0.hpp"
+#include "primes/p64_1.hpp"
+#include "primes/p128_0.hpp"
+#include "primes/p128_1.hpp"
+#include "primes/p192_0.hpp"
+#include "primes/p192_1.hpp"
+#include "primes/p256_0.hpp"
+#include "primes/p256_1.hpp"
+#include "primes/p512_0.hpp"
+#include "primes/p512_1.hpp"
 
 using namespace prime_field;
 
-#define TEST_LOOPS 1
+#define TEST_LOOPS 256
 
 #define RED_TESTS   3
 #define ADD_TESTS   3
@@ -194,19 +205,20 @@ void run_tests() {
         // legendre(t0 * t0) = 1
         mul(s0, t0[i], t0[i]); l[0] = legendre(s0);
         if(t0[i] != zero_elem)
-            tests[5][0] |= (l[0] == 1);
+            tests[5][0] |= (l[0] != 1);
 
         // legendre(t0 * t1) = legendre(t0) * legendre(t1)
         l[0] = legendre(t0[i]);
         l[1] = legendre(t1[i]);
         mul(s0, t0[i], t1[i]); l[2] = legendre(s0);
         if(t0[i] != zero_elem && t1[i] != zero_elem)
-            tests[5][1] |= ((l[0] * l[1] * l[2]) == 1);
+            tests[5][1] |= ((l[0] * l[1] * l[2]) != 1);
 
-        static unsigned char first_leg;
+        int first_leg;
         if(i == 0) first_leg = l[0];
         tests[5][2] |= (first_leg != l[0]) | (first_leg != l[1]) | (first_leg != l[2]);
         if(i == TEST_LOOPS - 1) tests[5][2] = !tests[5][2];
+
 
         // Inverse
         // inv(t0) * t0 = 1
@@ -246,11 +258,18 @@ void run_tests() {
         std::cout << "✗ Some tests failed!\n\n";
 }
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
 int main() {
-    const char* prime_names[] = {"p64_0", "p64_1", "p128_0", "p128_1", "p192_0", "p192_1", "p256_0", "p256_1", "p512_0", "p512_1"};
-    std::cout << "Testing " << prime_names[PRIME_ID] << "\n";
+#ifdef PRIME_TYPE
+    std::cout << "Testing " << TOSTRING(PRIME_TYPE) << "\n";
     std::cout << "========================\n";
-    run_tests<Prime>();
+    
+    run_tests<PRIME_TYPE>();
+#else
+    #error "PRIME_TYPE must be defined (e.g., -DPRIME_TYPE=P64_0)"
+#endif
 
     return 0;
 }

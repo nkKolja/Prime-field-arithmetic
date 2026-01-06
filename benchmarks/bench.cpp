@@ -7,7 +7,18 @@
 #include <ctime>
 #include <string>
 #include "../include/field_element.hpp"
-#include "../include/primes.hpp"
+
+// Include all prime definitions
+#include "../include/primes/p64_0.hpp"
+#include "../include/primes/p64_1.hpp"
+#include "../include/primes/p128_0.hpp"
+#include "../include/primes/p128_1.hpp"
+#include "../include/primes/p192_0.hpp"
+#include "../include/primes/p192_1.hpp"
+#include "../include/primes/p256_0.hpp"
+#include "../include/primes/p256_1.hpp"
+#include "../include/primes/p512_0.hpp"
+#include "../include/primes/p512_1.hpp"
 
 using namespace prime_field;
 
@@ -36,7 +47,7 @@ static std::string format_number(uint64_t num) {
     std::string str = std::to_string(num);
     std::string result;
     int count = 0;
-    for (auto it = str.rbegin(); it != str.rend(); ++it) {
+    for (auto it = str.rbegin(); it != str.rend(); it++) {
         if (count > 0 && count % 3 == 0) {
             result = '\'' + result;
         }
@@ -122,12 +133,20 @@ void run_benchmark(const char* prime_name) {
     std::cout << "\n";
 }
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
 int main() {
-    const char* prime_names[] = {"p64_0", "p64_1", "p128_0", "p128_1", "p192_0", "p192_1", "p256_0", "p256_1", "p512_0", "p512_1"};
+#ifdef PRIME_TYPE
     std::cout << "======================\n";
-    std::cout << "Benchmarking " << prime_names[PRIME_ID] << "\n";
+    std::cout << "Benchmarking " << TOSTRING(PRIME_TYPE) << "\n";
     std::cout << "======================\n";
-    run_benchmark<Prime>(prime_names[PRIME_ID]);
+    
+    run_benchmark<PRIME_TYPE>(TOSTRING(PRIME_TYPE));
+#else
+    #error "PRIME_TYPE must be defined (e.g., -DPRIME_TYPE=P64_0)"
+#endif
 
     return 0;
 }
+
