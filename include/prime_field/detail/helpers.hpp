@@ -244,4 +244,29 @@ void mp_mul(std::array<digit_t, N+M>& out, const std::array<digit_t, N>& in1, co
     out[min_MN + max_MN - 1] = v;
 }
 
+// Schoolbook multiprecision multiplication
+// Low word only
+// Input: in1 (N words), in2 (N words)
+// Output: out (N words) = (in1 * in2) % 2^(RADIX * N)
+template<size_t N>
+void mp_mul_low(std::array<digit_t, N>& out, const std::array<digit_t, N>& in1, const std::array<digit_t, N>& in2) {
+    digit_t t = 0, u = 0, v = 0;
+    digit_t hi, lo, carry;
+    
+    for (size_t i = 0; i < N; i++) {
+        digit_t carry = 0;
+        for (size_t j = 0; j <= i; j++) {
+            MUL(hi, lo, in1[j], in2[i-j]);
+            ADDC(v, v, lo, carry);
+            ADDC(u, u, hi, carry);
+            ADDC(t, t, 0, carry);
+        }
+        out[i] = v;
+        v = u;
+        u = t;
+        t = 0;
+    }
+}
+
+
 } // namespace prime_field

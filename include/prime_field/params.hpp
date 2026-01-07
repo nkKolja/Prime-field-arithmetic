@@ -25,9 +25,16 @@ constexpr std::array<digit_t, N> compute_R2(const std::array<digit_t, N>& p) {
     return out;
 }
 
-// Compute pp = -p^(-1) mod 2^(64 * N)
+// Compute R^3 mod p
 template<size_t N>
-constexpr std::array<digit_t, N> compute_pp(const std::array<digit_t, N>& p) {
+constexpr std::array<digit_t, N> compute_R3(const std::array<digit_t, N>& p) {
+    std::array<digit_t, N> out = mod_pow_of_2<N>(p, 3 * N * RADIX);
+    return out;
+}
+
+// Compute nip = -p^(-1) mod 2^(64 * N)
+template<size_t N>
+constexpr std::array<digit_t, N> compute_nip(const std::array<digit_t, N>& p) {
     // Invert
     std::array<digit_t, N> p_inv = inv_mod_2_64_N(p);
     
@@ -74,6 +81,18 @@ constexpr std::array<digit_t, N> compute_pp1_half(const std::array<digit_t, N>& 
     return out;
 }
 
+// Compute (p+1)/4
+// Assumes p ≡ 3 (mod 4)
+template<size_t N>
+constexpr std::array<digit_t, N> compute_pp1_quarter(const std::array<digit_t, N>& p) {
+    std::array<digit_t, N> one = {};
+    one[0] = 1;
+    
+    std::array<digit_t, N + 1> temp = add<N + 1, N, N>(p, one);
+    std::array<digit_t, N> out = rshift<N, N + 1>(temp, 2);
+    return out;
+}
+
 
 // Compute p-2
 template<size_t N>
@@ -101,12 +120,14 @@ struct PrimeParameters {
     // Essential Montgomery parameters (only 4 needed)
     static constexpr std::array<digit_t, NWORDS> Mont_one = compute_Mont_one(p);
     static constexpr std::array<digit_t, NWORDS> R2 = compute_R2(p);
+    static constexpr std::array<digit_t, NWORDS> R3 = compute_R3(p);
     static constexpr std::array<digit_t, NWORDS> TWO_POW_NBITS = compute_TWO_POW_NBITS<NWORDS>(NBITS, p);
-    static constexpr std::array<digit_t, NWORDS> pp = compute_pp(p);
+    static constexpr std::array<digit_t, NWORDS> nip = compute_nip(p);
     static constexpr std::array<digit_t, NWORDS> ip = compute_ip(p);
     static constexpr std::array<digit_t, NWORDS> iR = compute_iR(p);
     static constexpr std::array<digit_t, NWORDS> pm1_half = compute_pm1_half(p);
     static constexpr std::array<digit_t, NWORDS> pp1_half = compute_pp1_half(p);
+    static constexpr std::array<digit_t, NWORDS> pp1_quarter = compute_pp1_quarter(p);
     static constexpr std::array<digit_t, NWORDS> pm2 = compute_pm2(p);
 };
 
