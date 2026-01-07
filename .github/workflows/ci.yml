@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        prime: [test_p256_0, test_p256_1]
+        prime: [test_p64_0, test_p64_1, test_p256_0, test_p256_1]
     
     steps:
       - name: Checkout code
