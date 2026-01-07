@@ -56,7 +56,7 @@ void add(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
     for(size_t i = 0; i < NWORDS; i++)
         ADDC(out.data[i], in1.data[i], in2.data[i], carry);
 
-    if constexpr (Prime::NBITS % RADIX == 0){
+    if constexpr (Prime::NBITS == NWORDS * RADIX){
         digit_t mask = 0 - carry;
         digit_t borrow = 0;
         for(size_t i = 0; i < NWORDS; i++)
