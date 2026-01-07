@@ -35,11 +35,8 @@ Prime-field-arithmetic/
 
 - **ARM optimizations not yet implemented** - currently uses generic implementations only
 - **Prime-specific optimizations not yet added** - no specialized routines for special-form primes
-- The `random()` function for selecting random prime elements is **NOT**** uniform
-- The `random()` method is not seedable but uses system cryptographic randomness
+- The `random()` method is not seedable but uses system cryptographic randomness. Statistical distance from uniform worst case ≤ 2^(-63), but in general much larger.
 - The `sqrt()` function is **NOT constant-time** and Cipolla's algorithm is used as a temporary replacement.
-- The `reduce_full()` modular reduction is not fully implemented, works only for a special set of primes. 
-- The `reduce()` modular reduction for reducing [0, 2p) -> [0,p) works.
 
 ## Comparison with C Implementation
 

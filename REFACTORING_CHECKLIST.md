@@ -1,180 +1,81 @@
-# Repository Refactoring Checklist
+# Prime-field-arithmetic — Refactoring & Release Checklist
 
-Refactoring Prime-field-arithmetic to match professional cupqc SDK structure for interview demonstration.
+Purpose: turn the current research/refactor branch into a small, production-like C++ header/library. Prioritize minimal runnable examples, modern CMake packaging, tests, CI, and clear documentation.
 
-## Phase 1: Directory Structure Reorganization
+Legend
+- [ ]: not started  - [~]: in progress  - [x]: done
 
-### Include Directory Namespace
-- [x] Create `include/prime_field/` namespace directory
-- [x] Move `field_element.hpp` to `include/prime_field/`
-- [x] Move `field_element.tpp` to `include/prime_field/`
-- [x] Move `params.hpp` to `include/prime_field/`
-- [x] Move `types.hpp` to `include/prime_field/`
-- [x] Move `helpers.hpp` to `include/prime_field/detail/`
-- [x] Create `include/prime_field/operators/` directory
-- [x] Create `include/prime_field/traits/` directory
-- [x] Create `include/prime_field/detail/` directory
-- [x] Move `primes/` directory to `include/prime_field/primes/`
+Top priorities (interview-ready, do these first)
+- [ ] Examples: add two minimal, runnable examples (build + run in < 2 minutes):
+  - example/basic_usage/example_arithmetic.cpp — add/sub/mul/div, basic API usage
+  - example/basic_usage/example_field_ops.cpp — inverse, pow, sqrt (if available)
+- [ ] Modern CMake + Packaging:
+  - `CMakeLists.txt`: require CMake >= 3.15, add `prime_field::prime_field` INTERFACE target
+  - `install()` headers and export targets
+  - add `cmake/prime_field-config.cmake.in` and `prime_field-config-version.cmake.in`
+- [ ] CI: GitHub Actions that build (Debug/Release), run unit tests, and build/run examples
+- [ ] README: short Quick Start showing how to build, run examples, and use `find_package(PrimeField)` after install
 
-### Main Header
-- [x] Create `include/prime_field.hpp` as main entry point
-- [x] Add header guards and includes for all public headers
-- [x] Add namespace documentation
+API & code hygiene (short-term)
+- [ ] Public API review: finalise `include/prime_field.hpp` surface — small, clear, documented entry point
+- [ ] Split operators into `include/prime_field/operators/` (arithmetic, comparison, io)
+- [ ] Add `include/prime_field/traits/` with basic type traits and compile-time checks
+- [ ] Move internals to `include/prime_field/detail/`; add `config.hpp` and `macros.hpp`
+- [ ] Ensure all headers have include guards or `#pragma once`
+- [ ] Add lightweight Doxygen-style comments to public classes/functions for quick reference
 
-### Examples Directory
-- [ ] Create `example/` directory
-- [ ] Create `example/basic_usage/` subdirectory
-- [ ] Create `example/basic_usage/example_arithmetic.cpp` (add, sub, mul, div)
-- [ ] Create `example/basic_usage/example_montgomery.cpp` (conversions)
-- [ ] Create `example/basic_usage/example_field_ops.cpp` (inv, pow, sqrt)
-- [ ] Create `example/basic_usage/Makefile`
-- [ ] Create `example/advanced/` subdirectory
-- [ ] Create `example/advanced/example_custom_prime.cpp`
-- [ ] Create `example/advanced/example_performance.cpp`
-- [ ] Create `example/advanced/Makefile`
+Testing & Validation
+- [ ] Unit tests: expand `tests/` to cover basic algebraic properties (associativity, distributivity, inverses)
+- [ ] Add small deterministic RNG seeds for reproducible tests
+- [ ] Benchmarks: include microbenchmarks for add/mul/inv on typical primes (benchmarks/)
+- [ ] Automate benchmark run in CI as optional workflow (release-only)
 
-### CMake Infrastructure
-- [ ] Create `cmake/` directory
-- [ ] Create `cmake/prime_field-config.cmake.in` (package config template)
-- [ ] Create `cmake/prime_field-config-version.cmake.in` (version config)
-- [ ] Create `cmake/prime_field-targets.cmake` (export targets)
+Performance & correctness (medium-term)
+- [ ] Document and verify any RM or Montgomery optimisation implementations with correctness proofs/tests
+- [ ] Add performance regression tests to detect accidental slowdowns
+- [ ] Provide benchmark results in `docs/guides/PERFORMANCE.md`
 
-### Documentation Structure
-- [ ] Create `docs/` directory
-- [ ] Create `docs/api/` subdirectory
-- [ ] Create `docs/guides/` subdirectory
-- [ ] Create `docs/overview/` subdirectory
+Documentation & Examples (medium-term)
+- [ ] Docs skeleton: `docs/` with `guides/`, `api/`, `overview/`
+- [ ] `docs/guides/GETTING_STARTED.md` — quick start, install, example run
+- [ ] `docs/api/FIELD_ELEMENT.md` — describe `FieldElement` API and semantics
+- [ ] Add simple usage snippets inside headers as short examples
 
-## Phase 2: Code Organization
+Build system & packaging (medium-term)
+- [ ] Add `package()` / `CPack` recipe if you want binary packaging for demos
+- [ ] Provide minimal `Makefile` or `bootstrap.sh` for local dev convenience
 
-### Traits System
-- [ ] Create `include/prime_field/traits/field_traits.hpp`
-- [ ] Add type traits for field element properties
-- [ ] Add concepts for C++20 (if using) or SFINAE helpers
-- [ ] Create `include/prime_field/traits/prime_traits.hpp`
-- [ ] Add compile-time prime validation traits
+Code quality & developer experience
+- [ ] Add `.clang-format` and apply it
+- [ ] Add `.clang-tidy` recommended checks; fix high-confidence issues
+- [ ] Add CONTRIBUTING.md with build/test/benchmark instructions
+- [ ] Add license headers to source files and verify `LICENSE`
 
-### Operator Organization
-- [ ] Create `include/prime_field/operators/arithmetic.hpp`
-- [ ] Move arithmetic operators (+, -, *, /) to separate file
-- [ ] Create `include/prime_field/operators/comparison.hpp`
-- [ ] Move comparison operators (==, !=, <, >, <=, >=) to separate file
-- [ ] Create `include/prime_field/operators/io.hpp`
-- [ ] Add stream operators (<<, >>) for field elements
+CI/CD & Release
+- [ ] CI: build matrix (linux/macOS, Debug/Release), run unit tests and examples
+- [ ] Add status badges to `README.md`
+- [ ] Automate release tagging on merge (optionally via a GitHub Action)
 
-### Detail Namespace
-- [ ] Move internal helpers to `include/prime_field/detail/`
-- [ ] Create `include/prime_field/detail/config.hpp` for build configuration
-- [ ] Create `include/prime_field/detail/macros.hpp` for internal macros
-- [ ] Update helper functions to use detail namespace
+Acceptance criteria (what 'done' looks like for interview)
+- [ ] `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --target install` installs headers and exports `prime_field::prime_field`
+- [ ] Examples compile and run against installed package in < 2 minutes on a laptop
+- [ ] Unit tests pass in CI on Linux and macOS
+- [ ] Brief README with 3 commands: build, install, run example
+- [ ] One-page demo notes that include: API decisions, where optimizations live, and a short performance summary
 
-### Header Dependencies
-- [ ] Update all `#include` paths in moved files
-- [ ] Ensure forward declarations where appropriate
-- [ ] Add include guards to all headers
-- [ ] Add `#pragma once` or traditional guards consistently
+Demo checklist (prep for interview)
+- [ ] One-liner elevator pitch about design choices (namespacing, header-only vs binary, per-prime implementations)
+- [ ] Have commands ready to build & run example (copy/paste):
+  - mkdir -p build && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+  - cmake --build build --target install
+  - cmake --build build --target example_basic_usage
 
-## Phase 3: Professional Polish
+Optional / Nice-to-have (if time permits)
+- [ ] Provide `conan` or `vcpkg` manifest for consumers
+- [ ] Add continuous benchmark reporting (e.g., use google/benchmark + upload results)
+- [ ] Add code coverage job and badge
 
-### CMake Build System
-- [ ] Update `CMakeLists.txt` with modern CMake practices (3.15+)
-- [ ] Add `install()` targets for headers
-- [ ] Add `export()` for package configuration
-- [ ] Configure package config file generation
-- [ ] Add version configuration
-- [ ] Create `prime_field::prime_field` INTERFACE library target
-- [ ] Add installation rules for cmake config files
-- [ ] Add `find_package(PrimeField)` support
+Notes & priorities
+- Focus immediate effort on Examples + CMake + CI + README — these maximize interview impact.
+- After those, prioritize API ergonomics, tests, and docs.
 
-### Documentation Files
-- [ ] Update `README.md` with professional structure:
-  - [ ] Project overview and features
-  - [ ] Quick start example
-  - [ ] Installation instructions
-  - [ ] Usage examples with code snippets
-  - [ ] API reference links
-  - [ ] Building from source
-  - [ ] Running tests and benchmarks
-  - [ ] Contributing guidelines
-  - [ ] License information
-- [ ] Create `docs/api/FIELD_ELEMENT.md` (FieldElement API reference)
-- [ ] Create `docs/api/OPERATORS.md` (operator overloads)
-- [ ] Create `docs/api/PRIMES.md` (available prime configurations)
-- [ ] Create `docs/guides/GETTING_STARTED.md`
-- [ ] Create `docs/guides/ADDING_PRIMES.md`
-- [ ] Create `docs/guides/PERFORMANCE.md`
-- [ ] Create `docs/overview/FEATURES.md`
-- [ ] Create `docs/overview/REQUIREMENTS.md`
-
-### License and Legal
-- [ ] Review/update `LICENSE` file
-- [ ] Add license headers to all source files
-- [ ] Create `NOTICE` file if using third-party code
-- [ ] Add copyright notices
-
-### Examples
-- [ ] Write comprehensive example code
-- [ ] Ensure all examples compile and run
-- [ ] Add comments and documentation to examples
-- [ ] Create example Makefiles that use installed library
-
-### CI/CD Improvements
-- [ ] Update `.github/workflows/ci.yml`:
-  - [ ] Add installation test (make install)
-  - [ ] Add example building test
-  - [ ] Add documentation generation (if using doxygen/sphinx)
-  - [ ] Add code coverage reporting (optional)
-- [ ] Add status badges to README (build status, license)
-
-### Code Quality
-- [ ] Add `.clang-format` for consistent formatting
-- [ ] Run formatter on all code
-- [ ] Add `.clang-tidy` configuration
-- [ ] Address any warnings or suggestions
-- [ ] Add `CHANGELOG.md` for version history
-
-### Build System Updates
-- [ ] Update Makefile to respect new structure
-- [ ] Add `make install` target to Makefile
-- [ ] Add `make examples` target
-- [ ] Ensure tests work with new structure
-- [ ] Ensure benchmarks work with new structure
-
-## Phase 4: Validation
-
-### Build Testing
-- [ ] Clean build with CMake
-- [ ] Clean build with Makefile
-- [ ] Test all 10 prime configurations
-- [ ] Run all tests and verify passing
-- [ ] Run all benchmarks
-- [ ] Build all examples
-
-### Installation Testing
-- [ ] Test `make install` / `cmake --install`
-- [ ] Create test project using `find_package(PrimeField)`
-- [ ] Verify installed headers are accessible
-- [ ] Verify examples work with installed library
-
-### Documentation Review
-- [ ] Proofread all documentation
-- [ ] Verify all code examples compile
-- [ ] Check all links work
-- [ ] Ensure consistent terminology
-
-### Final Checks
-- [ ] All files have appropriate licenses
-- [ ] No build warnings
-- [ ] No TODOs or FIXMEs in committed code
-- [ ] Git history is clean
-- [ ] Tag release version (e.g., v1.0.0)
-
----
-
-## Notes
-
-- **Priority**: Focus on Phase 1-2 first for maximum impact
-- **Timeline**: Estimate 2-3 hours for full refactoring
-- **Testing**: Run tests after each major change
-- **Git**: Commit frequently with clear messages
-- **Interview**: Highlight namespace organization, modern CMake, and professional structure

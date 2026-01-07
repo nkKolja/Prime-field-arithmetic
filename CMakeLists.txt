@@ -52,6 +52,7 @@ foreach(PRIME ${PRIMES})
     target_link_libraries(test_${PRIME} prime_field_${PRIME})
     target_compile_definitions(test_${PRIME} PRIVATE PRIME_TYPE=${PRIME_UPPER})
     add_test(NAME test_${PRIME} COMMAND test_${PRIME})
+    set_tests_properties(test_${PRIME} PROPERTIES TIMEOUT 120)
 endforeach()
 
 # Create benchmark executables for each prime (linking against static libs)

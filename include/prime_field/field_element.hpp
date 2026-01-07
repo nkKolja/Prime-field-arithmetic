@@ -41,14 +41,15 @@ public:
     // Constructors
     constexpr FieldElement() : data{} {}
     
-    explicit FieldElement(const std::array<digit_t, NWORDS>& arr) : data(arr) {
-        *this = to_montgomery<Prime>(arr);
+    explicit FieldElement(std::array<digit_t, NWORDS>& arr) {
+        to_montgomery(*this, arr);
     }
-    
+
     explicit FieldElement(digit_t value) {
-        std::array<digit_t, NWORDS> arr{};
-        arr[0] = value;
-        *this = to_montgomery<Prime>(arr);
+        FieldElement<Prime> temp_0, r2;
+        r2.data = Prime::R2;
+        temp_0.data[0] = value;
+        mul(*this, temp_0, r2);
     }
 
     constexpr FieldElement(const FieldElement& other) = default;

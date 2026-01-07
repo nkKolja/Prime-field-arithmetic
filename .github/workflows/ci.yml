@@ -10,6 +10,7 @@ jobs:
   test:
     name: Test ${{ matrix.prime }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # Kill job if it takes > 10 minutes
     
     strategy:
       fail-fast: false
@@ -26,5 +27,8 @@ jobs:
           sudo apt-get install -y build-essential g++
       
       - name: Build and test ${{ matrix.prime }}
-        run: make ${{ matrix.prime }} && ./build/${{ matrix.prime }}
+        timeout-minutes: 5  # Kill this step if it takes > 5 minutes
+        run: |
+          make ${{ matrix.prime }}
+          timeout 30s ./build/${{ matrix.prime }} || exit 1
 
