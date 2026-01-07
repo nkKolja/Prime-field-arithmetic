@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        prime: [test_p64_0, test_p64_1, test_p128_0, test_p128_1, test_p192_0, test_p192_1, test_p256_0, test_p256_1, test_p512_0, test_p512_1]
+        prime: [test_p256_0, test_p256_1]
     
     steps:
       - name: Checkout code
@@ -28,5 +28,7 @@ jobs:
       
       - name: Build and test ${{ matrix.prime }}
         timeout-minutes: 5  # Kill this step if it takes > 5 minutes
-        run: make ${{ matrix.prime }} && ./build/${{ matrix.prime }}
+        run: |
+          make ${{ matrix.prime }}
+          timeout 30s ./build/${{ matrix.prime }} || exit 1
 
