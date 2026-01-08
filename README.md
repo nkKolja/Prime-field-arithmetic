@@ -8,12 +8,11 @@ A hybrid header-only/pre-compiled library for prime field arithmetic. This is a 
 
 **Features:**
 - **Template metaprogramming** - define your own prime and all Montgomery parameters are computed at compile time
-- **Type-safe field elements** - compile-time enforcement prevents mixing different prime fields
 - **Constant-time operations** - no data-dependent branches or operations
 - **Constant memory access** - no data-dependent memory address accesses
 - **Hybrid distribution** - pre-compiled static libraries for fast compilation, or header-only for custom primes
-- Pre-configured primes from 64 to 512 bits
-- Field operations: add, sub, mul, inv, pow, legendre, sqrt
+- **Pre-configured primes** - Optimised primes from 64 to 512 bits (10 total)
+- **Field operations** - add, sub, neg, mul, inv, div, pow, legendre, sqrt
 
 ## Library Structure
 
