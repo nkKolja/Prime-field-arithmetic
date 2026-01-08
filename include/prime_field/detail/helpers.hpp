@@ -254,7 +254,7 @@ void mp_mul_low(std::array<digit_t, N>& out, const std::array<digit_t, N>& in1, 
     digit_t hi, lo, carry;
     
     for (size_t i = 0; i < N; i++) {
-        digit_t carry = 0;
+        carry = 0;
         for (size_t j = 0; j <= i; j++) {
             MUL(hi, lo, in1[j], in2[i-j]);
             ADDC(v, v, lo, carry);

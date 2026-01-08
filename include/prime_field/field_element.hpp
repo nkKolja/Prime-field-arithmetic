@@ -148,6 +148,12 @@ public:
     
     
     void print(std::ostream& os = std::cout) const {
+        FieldElement<Prime> temp;
+        from_montgomery(temp.data, *this);
+        print_array(os, temp.data);
+    }
+
+    void print_debug(std::ostream& os = std::cout) const {
         print_array(os, data);
     }
 };

@@ -63,6 +63,11 @@ foreach(PRIME ${PRIMES})
     target_compile_definitions(bench_${PRIME} PRIVATE PRIME_TYPE=${PRIME_UPPER})
 endforeach()
 
+# Add example subdirectory so example targets are available by default
+if(EXISTS "${CMAKE_SOURCE_DIR}/example/basic_usage/CMakeLists.txt")
+    add_subdirectory(example/basic_usage)
+endif()
+
 # Print configuration
 message(STATUS "Build configuration:")
 message(STATUS "  C++ Compiler: ${CMAKE_CXX_COMPILER}")

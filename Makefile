@@ -1,4 +1,4 @@
-.PHONY: all clean test bench test_all bench_all
+.PHONY: all clean test bench test_all bench_all example
 
 CXX = g++
 CXXFLAGS = -std=c++20 -I./include -O3 -Wfatal-errors
@@ -73,6 +73,12 @@ bench: bench_all
 
 clean:
 	@rm -rf $(BUILD_DIR)
+
+# Build and run the basic example
+example:
+	@cmake -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=Release
+	@cmake --build $(BUILD_DIR) --target example_basic_usage -- -j
+	@./$(BUILD_DIR)/example/basic_usage/example_basic_usage
 
 help:
 	@echo "Available targets:"

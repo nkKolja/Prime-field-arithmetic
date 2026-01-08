@@ -6,6 +6,15 @@ A C++ template library for constant-time finite field arithmetic using Montgomer
 
 A hybrid header-only/pre-compiled library for prime field arithmetic. This is a reimagining of [Finite-field-arithmetic](https://github.com/nkKolja/Finite-field-arithmetic) (C implementation) using modern C++ features.
 
+## Quick Start
+
+Build and run the basic example added under `example/basic_usage`:
+
+```bash
+make example
+```
+
+
 **Features:**
 - **Template metaprogramming** - define your own prime and all Montgomery parameters are computed at compile time
 - **Constant-time operations** - no data-dependent branches or operations
