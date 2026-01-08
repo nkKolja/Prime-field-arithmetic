@@ -26,3 +26,7 @@ cmake_install.cmake
 build/Makefile
 *.cmake
 !CMakeLists.txt
+
+
+# Personal files
+REFACTORING_CHECKLIST.md
