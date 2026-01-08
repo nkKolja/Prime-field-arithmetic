@@ -13,6 +13,7 @@ A hybrid header-only/pre-compiled library for prime field arithmetic. This is a 
 - **Hybrid distribution** - pre-compiled static libraries for fast compilation, or header-only for custom primes
 - **Pre-configured primes** - Optimised primes from 64 to 512 bits (10 total)
 - **Field operations** - add, sub, neg, mul, inv, div, pow, legendre, sqrt
+- **Random** - random distribution l1 distance from uniform < 2^(-64), and much smaller in general
 
 ## Library Structure
 
@@ -34,7 +35,7 @@ Prime-field-arithmetic/
 
 - **ARM optimizations not yet implemented** - currently uses generic implementations only
 - **Prime-specific optimizations not yet added** - no specialized routines for special-form primes
-- The `random()` method is not seedable but uses system cryptographic randomness. Statistical distance from uniform worst case ≤ 2^(-63), but in general much larger.
+- The `random()` method is not seedable and uses system cryptographic randomness. 
 - The `sqrt()` function is **NOT constant-time** and Cipolla's algorithm is used as a temporary replacement.
 
 ## Comparison with C Implementation
