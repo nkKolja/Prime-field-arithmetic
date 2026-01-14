@@ -6,7 +6,7 @@ A C++ template library for constant-time finite field arithmetic using Montgomer
 
 A hybrid header-only/pre-compiled library for prime field arithmetic. This is a reimagining of [Finite-field-arithmetic](https://github.com/nkKolja/Finite-field-arithmetic) (C implementation) using modern C++ features.
 
-Note: Some parts of the repository were written with the help of AI - the README, Makefile and CMakeLists, and some parts of comments and documentation.
+>Note: Some parts of the repository were written with the help of AI - the README, Makefile and CMakeLists, and some parts of comments and documentation.
 
 ## Quick Start
 
