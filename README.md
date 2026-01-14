@@ -48,9 +48,10 @@ Prime-field-arithmetic/
 - **Prime-specific optimizations not yet added** - no specialized routines for special-form primes
 - The `random()` method is not seedable and uses system cryptographic randomness. 
 - The `sqrt()` function is **NOT constant-time** and Cipolla's algorithm is used as a temporary replacement.
-- Write documentation.
+- Write documentation, explain usage of `digit_t`.
 - Rewrite Makefile, CMakeLists and comments manually, and remove AI-generated documentation.
 - Allow prime context generation from hexadecimal string.
+- Set Mont_one to be a field element and not `digit_t` array.
 
 ## Comparison with C Implementation
 
