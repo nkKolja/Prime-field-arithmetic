@@ -50,6 +50,7 @@ Prime-field-arithmetic/
 - The `sqrt()` function is **NOT constant-time** and Cipolla's algorithm is used as a temporary replacement.
 - Write documentation.
 - Rewrite Makefile, CMakeLists and comments manually, and remove AI-generated documentation.
+- Allow prime context generation from hexadecimal string.
 
 ## Comparison with C Implementation
 
