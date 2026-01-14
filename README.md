@@ -6,6 +6,8 @@ A C++ template library for constant-time finite field arithmetic using Montgomer
 
 A hybrid header-only/pre-compiled library for prime field arithmetic. This is a reimagining of [Finite-field-arithmetic](https://github.com/nkKolja/Finite-field-arithmetic) (C implementation) using modern C++ features.
 
+Note: Some parts of the repository were written with the help of AI - the README, Makefile and CMakeLists, and some parts of comments and documentation.
+
 ## Quick Start
 
 Build and run the basic example added under `example/basic_usage`:
@@ -46,6 +48,8 @@ Prime-field-arithmetic/
 - **Prime-specific optimizations not yet added** - no specialized routines for special-form primes
 - The `random()` method is not seedable and uses system cryptographic randomness. 
 - The `sqrt()` function is **NOT constant-time** and Cipolla's algorithm is used as a temporary replacement.
+- Write documentation.
+- Rewrite Makefile, CMakeLists and comments manually, and remove AI-generated documentation.
 
 ## Comparison with C Implementation
 
