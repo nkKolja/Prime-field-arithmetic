@@ -167,7 +167,7 @@ void pow(FieldElement<Prime>& result, const FieldElement<Prime>& a, const std::a
         for (int j = 63; j >= 0; j--) {
             bit = (exp[i] >> j) & 0x01;
 
-            cond_swap(t0.data, t1.data, bit ^ prevbit);
+            conditional_swap(t0.data, t1.data, bit ^ prevbit);
 
             mul(t1, t0, t1);  // t1 = t0 * t1
             mul(t0, t0, t0);  // t0 = t0 * t0
@@ -176,7 +176,7 @@ void pow(FieldElement<Prime>& result, const FieldElement<Prime>& a, const std::a
         }
     }
 
-    cond_swap(t0.data, t1.data, prevbit);
+    conditional_swap(t0.data, t1.data, prevbit);
 
     result = t0;
 }
@@ -221,9 +221,11 @@ void sqrt(FieldElement<Prime>& out, const FieldElement<Prime>& in) {
     FieldElement<Prime> a = {};
     FieldElement<Prime> non_residue = {};
     FieldElement<Prime> one = {};
+    FieldElement<Prime> zero = {};
     one.data = Prime::Mont_one;
 
     neg(non_residue, in);
+    conditional_select(non_residue, non_residue, one, in == zero);
 
     while (legendre(non_residue) != -1) {
         add(a, a, one);
@@ -248,8 +250,8 @@ void sqrt(FieldElement<Prime>& out, const FieldElement<Prime>& in) {
         for (int j = RADIX - 1; j >= 0; j--) {
             bit = (exp[i] >> j) & 0x01;
 
-            cond_swap(t0[0].data, t1[0].data, bit ^ prevbit);
-            cond_swap(t0[1].data, t1[1].data, bit ^ prevbit);
+            conditional_swap(t0[0].data, t1[0].data, bit ^ prevbit);
+            conditional_swap(t0[1].data, t1[1].data, bit ^ prevbit);
 
             mul_fp2(t1, t0, t1, non_residue);  // t1 = t0 * t1
             mul_fp2(t0, t0, t0, non_residue);  // t0 = t0 * t0
@@ -258,10 +260,10 @@ void sqrt(FieldElement<Prime>& out, const FieldElement<Prime>& in) {
         }
     }
 
-    cond_swap(t0[0].data, t1[0].data, prevbit);
-    cond_swap(t0[1].data, t1[1].data, prevbit);
+    conditional_swap(t0[0].data, t1[0].data, prevbit);
+    conditional_swap(t0[1].data, t1[1].data, prevbit);
 
-    out = t0[0];
+    conditional_select(out, t0[0], zero, in == zero);
 }
 
 // Returns the Legendre symbol (a|p)
@@ -346,6 +348,17 @@ void from_montgomery(std::array<digit_t, Prime::NWORDS>& out, const FieldElement
     out = result.data;
 }
 
+// Conditional select: out = (cond) ? in2 : in1 (constant-time)
+template<typename Prime>
+void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2, bool cond) {
+    conditional_select(out.data, in1.data, in2.data, cond);
+}
+
+// Conditional swap: swaps a and b if cond != 0 (constant-time)
+template<typename Prime>
+void conditional_swap(FieldElement<Prime>& a, FieldElement<Prime>& b, bool cond) {
+    conditional_swap(a.data, b.data, cond);
+}
 
 
 template<typename Prime>

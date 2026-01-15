@@ -42,16 +42,24 @@ Prime-field-arithmetic/
 └── benchmarks/       # Performance benchmarks
 ```
 
-## Work in progress
+## Current limitations
 
-- **ARM optimizations not yet implemented** - currently uses generic implementations only
-- **Prime-specific optimizations not yet added** - no specialized routines for special-form primes
-- The `random()` method is not seedable and uses system cryptographic randomness. 
-- The `sqrt()` function is **NOT constant-time** and Cipolla's algorithm is used as a temporary replacement.
-- Write documentation, explain usage of `digit_t`.
-- Rewrite Makefile, CMakeLists and comments manually, and remove AI-generated documentation.
-- Allow prime context generation from hexadecimal string.
-- Set Mont_one to be a field element and not `digit_t` array.
+- **No ARM assembly optimizations** - currently uses generic C++ implementations only
+- **No prime-specific optimizations** - special-form primes not exploited
+- **Square root is NOT constant-time** - uses Cipolla's algorithm as temporary solution
+- **Random values are not seedable** - uses system cryptographic randomness (`/dev/urandom`)
+
+## To-do
+
+- Add Barrett's reduction implementation
+- Prime field initialization from hexadecimal strings
+- Refactor Montgomery representation to use `FieldElement` for `Mont_one` and similar constants
+- Support for arbitrary-precision exponents (`std::vector<digit_t>`) and native `int` types
+- GCD-based algorithms for modular inverse and Legendre symbol computation
+- Manual rewrite of build system and documentation (remove AI-generated content)
+- Comprehensive documentation for `digit_t` usage and custom prime definition
+- ARM assembly optimizations 
+- Specialized routines for primes of a special format
 
 ## Comparison with C Implementation
 

@@ -22,7 +22,7 @@ template<typename Prime, size_t N> void pow(FieldElement<Prime>& out, const Fiel
 template<typename Prime> void sqrt(FieldElement<Prime>& out, const FieldElement<Prime>& in);
 template<typename Prime> int legendre(const FieldElement<Prime>& a);
 template<typename Prime> FieldElement<Prime> random();
-template<typename Prime> void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, FieldElement<Prime>& in2, bool cond);
+template<typename Prime> void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2, bool cond);
 template<typename Prime> void conditional_swap(FieldElement<Prime>& out, const FieldElement<Prime>& in1, FieldElement<Prime>& in2, bool cond);
 template<typename Prime> FieldElement<Prime> to_montgomery(const std::array<digit_t, Prime::NWORDS>& value);
 template<typename Prime> std::array<digit_t, Prime::NWORDS> from_montgomery(const FieldElement<Prime>& a);

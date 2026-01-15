@@ -62,7 +62,7 @@ void conditional_select(std::array<digit_t, N>& out, const std::array<digit_t, N
 
 // Conditional swap: swaps a and b if cond != 0 (constant-time)
 template<size_t N>
-void cond_swap(std::array<digit_t, N>& a, std::array<digit_t, N>& b, bool cond) {
+void conditional_swap(std::array<digit_t, N>& a, std::array<digit_t, N>& b, bool cond) {
     digit_t mask = static_cast<digit_t>(-(digit_t)cond);
     
     for (size_t i = 0; i < N; i++) {

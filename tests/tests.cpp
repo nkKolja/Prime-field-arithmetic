@@ -19,6 +19,9 @@
 using namespace prime_field;
 
 #define TEST_LOOPS 256
+#define BORDER_CASES 3
+#define TOT_BORDER_TESTS (BORDER_CASES * BORDER_CASES * BORDER_CASES)
+static_assert(TEST_LOOPS > TOT_BORDER_TESTS + 128, "TEST_LOOPS must be greater than BORDER_CASES^3 + 128");
 
 #define RED_TESTS   3
 #define ADD_TESTS   3
@@ -85,14 +88,35 @@ int run_tests() {
     for(size_t i = 0; i < Prime::NWORDS; i++)
         zero_elem.data[i] = 0;
     
+    // One mont is odd so no need to propagate
     F one_mont;
     one_mont.data = Prime::Mont_one;
-    
+
     F p_elem;
     p_elem.data = Prime::p;
 
+    // Prime is odd so no need to propagate
+    F minus_one;
+    minus_one.data = Prime::p;
+    minus_one.data[0] -= 1;
+
     std::cout << "\n";
 
+    // Border case tests
+    // First 27 elements cover all combinations of 0, p-1 and random
+    int i = 0;
+    for (int i0 = 0; i0 < BORDER_CASES; i0++) {
+        for (int i1 = 0; i1 < BORDER_CASES; i1++) {
+            for (int i2 = 0; i2 < BORDER_CASES; i2++) {
+                t0[i] = (i0 == 0) ? zero_elem : (i0 == 1) ? minus_one : t0[i];
+                t1[i] = (i1 == 0) ? zero_elem : (i1 == 1) ? minus_one : t1[i];
+                t2[i] = (i2 == 0) ? zero_elem : (i2 == 1) ? minus_one : t2[i];
+                i++;
+            }
+        }
+    }
+
+    std::cout << "TEST TEST TEST" << "\n";
     for(int i = 0; i < TEST_LOOPS; i++) {
         F s0, s1, s2;
         unsigned char s[3];
@@ -201,8 +225,9 @@ int run_tests() {
         if(t0[i] != zero_elem && t1[i] != zero_elem)
             tests[5][1] |= ((l[0] * l[1] * l[2]) != 1);
 
-        if(i == 0) first_leg = l[0];
-        tests[5][2] |= (first_leg != l[0]) | (first_leg != l[1]) | (first_leg != l[2]);
+        // Check that they're not all equal - skip border cases
+        if(i == TOT_BORDER_TESTS) first_leg = l[0];
+        if(i >= TOT_BORDER_TESTS) tests[5][2] |= (first_leg != l[0]) | (first_leg != l[1]) | (first_leg != l[2]);
         if(i == TEST_LOOPS - 1) tests[5][2] = !tests[5][2];
 
 
