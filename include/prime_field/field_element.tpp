@@ -19,7 +19,7 @@ template<typename Prime>
 void reduce(FieldElement<Prime>& a) {
     constexpr auto& p = Prime::p;
 
-    mp_sub_conditional(a.data, a.data, p);
+    a.data = mp_sub_conditional<Prime::NWORDS, Prime::NWORDS, Prime::NWORDS>(a.data, p);
 }
 
 // Modular reduction: a = a mod p
@@ -36,7 +36,7 @@ void reduce_full(FieldElement<Prime>& a) {
     for (size_t i = 0; i < NWORDS; i++)
         temp_a[i] = a.data[i];
 
-    a.data = montgomery_reduce(temp_a);
+    a.data = montgomery_reduce<Prime>(temp_a);
     mul(a, a, r2);
 }
 
@@ -75,7 +75,7 @@ template<typename Prime>
 void neg(FieldElement<Prime>& out, const FieldElement<Prime>& in) {
     const auto& p = Prime::p;
 
-    out.data = mp_sub(p, in.data);
+    out.data = mp_sub<Prime::NWORDS, Prime::NWORDS>(p, in.data);
     reduce(out);
 }
 
@@ -118,15 +118,15 @@ void mul(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
 
         for (size_t j = 0; j < N; j++) {
             temp_0 = mp_mul_digit(in1.data, in2.data[j]);
-            temp_c = mp_add(temp_c, temp_0);
+            temp_c = mp_add<N + 1, N + 1, N + 1>(temp_c, temp_0);
 
             digit_t q = temp_c[0] * nip_0;
 
             temp_0 = mp_mul_digit(p, q);
-            temp_c = mp_add_and_divide(temp_c, temp_0);
+            temp_c = mp_add_and_divide<N + 1, N + 1, N + 1>(temp_c, temp_0);
         }
 
-        out.data = mp_sub_conditional(array_truncate<N>(temp_c), p);
+        out.data = mp_sub_conditional<N, N, N>(array_truncate<N>(temp_c), p);
 
     } else {
 
@@ -136,15 +136,15 @@ void mul(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
         for (size_t j = 0; j < N; j++) {
 
             temp_0 = mp_mul_digit(in1.data, in2.data[j]);
-            temp_c = mp_add(temp_c, temp_0);
+            temp_c = mp_add<N + 2, N + 2, N + 1>(temp_c, temp_0);
             
             digit_t q = temp_c[0] * nip_0;
 
             temp_0 = mp_mul_digit(p, q);
-            temp_c = mp_add_and_divide(temp_c, temp_0);
+            temp_c = mp_add_and_divide<N + 2, N + 2, N + 1>(temp_c, temp_0);
         }
 
-        out.data = mp_sub_conditional(temp_c, p);
+        out.data = mp_sub_conditional<N, N + 2, N>(temp_c, p);
     }
 }
 
@@ -322,7 +322,7 @@ void from_montgomery(std::array<digit_t, Prime::NWORDS>& out, const FieldElement
 // Conditional select: out = (cond) ? in2 : in1 (constant-time)
 template<typename Prime>
 void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2, bool cond) {
-    conditional_select(out.data, in1.data, in2.data, cond);
+    out.data = conditional_select(in1.data, in2.data, cond);
 }
 
 // Conditional swap: swaps a and b if cond != 0 (constant-time)
@@ -344,7 +344,7 @@ bool random(FieldElement<Prime>& out) noexcept {
 
     temp[2 * NWORDS - 1] &= ((digit_t) 1 << LAST_BITS) - 1;
 
-    out.data = montgomery_reduce(temp);
+    out.data = montgomery_reduce<Prime>(temp);
     return true;
 }
 

@@ -3,6 +3,7 @@
 #include <array>
 #include <iostream>
 #include <iomanip>
+#include <cassert>
 #include "../types.hpp"
 
 namespace prime_field {
@@ -34,14 +35,14 @@ constexpr std::array<digit_t, N>& array_truncate(std::array<digit_t, M>& arr) {
 
 
 // Constant-time equality check for word - 1 if equal, 0 if not equal
-constexpr bool ct_equal(const digit_t in1, const digit_t in2) {
+bool ct_equal(const digit_t in1, const digit_t in2) {
     volatile digit_t c = in1 ^ in2;
     return ((c | (0 - c)) >> (RADIX - 1)) ^ 1;
 }
 
 // Constant-time equality check for array - 1 if equal, 0 if not equal
 template<size_t N>
-constexpr bool ct_equal(const std::array<digit_t, N>& in1, const std::array<digit_t, N>& in2) {
+bool ct_equal(const std::array<digit_t, N>& in1, const std::array<digit_t, N>& in2) {
     volatile digit_t c = 0;
     for (size_t i = 0; i < N; i++)
         c |= in1[i] ^ in2[i];
@@ -50,15 +51,31 @@ constexpr bool ct_equal(const std::array<digit_t, N>& in1, const std::array<digi
 
 
 // Constant-time inequality check for word - 1 if not equal, 0 if equal
-constexpr bool ct_nequal(const digit_t in1, const digit_t in2) {
+bool ct_nequal(const digit_t in1, const digit_t in2) {
     volatile digit_t c = in1 ^ in2;
     return ((c | (0 - c)) >> (RADIX - 1));
 }
 
 // Constant-time inequality check for array - 1 if not equal, 0 if equal
 template<size_t N>
-constexpr bool ct_nequal(const std::array<digit_t, N>& in1, const std::array<digit_t, N>& in2) {
+bool ct_nequal(const std::array<digit_t, N>& in1, const std::array<digit_t, N>& in2) {
     volatile digit_t c = 0;
+    for (size_t i = 0; i < N; i++)
+        c |= in1[i] ^ in2[i];
+    return ((c | (0 - c)) >> (RADIX - 1));
+}
+
+
+// Constant-time inequality check for word - 1 if not equal, 0 if equal
+constexpr bool ce_nequal(const digit_t in1, const digit_t in2) {
+    digit_t c = in1 ^ in2;
+    return ((c | (0 - c)) >> (RADIX - 1));
+}
+
+// Constant-time inequality check for array - 1 if not equal, 0 if equal
+template<size_t N>
+constexpr bool ce_nequal(const std::array<digit_t, N>& in1, const std::array<digit_t, N>& in2) {
+    digit_t c = 0;
     for (size_t i = 0; i < N; i++)
         c |= in1[i] ^ in2[i];
     return ((c | (0 - c)) >> (RADIX - 1));
@@ -137,7 +154,7 @@ constexpr size_t bitsize(const digit_t in) {
     size_t mask, shift;
 
     for (size_t i = 32; i > 0; i >>= 1) {
-        mask = -(digit_t)ct_nequal(in_copy >> i, 0);
+        mask = -(digit_t)ce_nequal(in_copy >> i, 0);
         shift = mask & i;
         in_copy >>= shift;
         pos += shift;
@@ -157,10 +174,10 @@ constexpr size_t bitsize(const std::array<digit_t, N>& in) {
     for (int i = N - 1; i >= 0; i--) {
         temp = conditional_select(in[i], mask, flag);
         out += bitsize(temp);
-        flag |= ct_nequal(in[i], 0);
+        flag |= ce_nequal(in[i], 0);
     }
 
-    return pos;
+    return out;
 }
 
 
@@ -243,22 +260,15 @@ constexpr std::array<digit_t, K> mp_add(const std::array<digit_t, N>& in1, const
 // Overflow over K-sized array is discarded
 template<size_t K, size_t N, size_t M>
 constexpr std::array<digit_t, K> mp_add_and_divide(const std::array<digit_t, N>& in1, const std::array<digit_t, M>& in2) {
-    std::array<digit_t, N> out = {};
+    std::array<digit_t, K> out = {};
     digit_t carry = 0;
-    size_t i = 0;
-    ADDC(out[0], in1[0], in2[0], carry); i++;
 
-    for(; i < M && i < N && i < K; i++)
-        ADDC(out[i-1], in1[i], in2[i], carry);
-
-    for (; i < N && i < K; i++)
-        ADDC(out[i-1], in1[i], 0, carry);
-
-    for (; i < M && i < K; i++)
-        ADDC(out[i-1], 0, in2[i], carry);
-
-    for (; i < K; i++)
-        ADDC(out[i-1], 0, 0, carry);
+    // Compute (in1 + in2) >> RADIX, i.e. shift right by one word.
+    for (size_t i = 0; i < K; i++) {
+        digit_t a = (i + 1 < N) ? in1[i + 1] : 0;
+        digit_t b = (i + 1 < M) ? in2[i + 1] : 0;
+        ADDC(out[i], a, b, carry);
+    }
 
     return out;
 }
@@ -299,7 +309,7 @@ constexpr std::array<digit_t, K> mp_sub(const std::array<digit_t, N>& in1, const
 // Assumes output fits in K words
 template<size_t K, size_t N, size_t M>
 constexpr std::array<digit_t, K> mp_sub_conditional(const std::array<digit_t, N>& in1, const std::array<digit_t, M>& in2) {
-    std::array<digit_t, N> out = {};
+    std::array<digit_t, K> out = {};
     digit_t temp, mask, borrow, carry;
     size_t i = 0, j = 0;
 
@@ -323,6 +333,7 @@ constexpr std::array<digit_t, K> mp_sub_conditional(const std::array<digit_t, N>
     for (; j < K; j++)
         ADDC(out[j], out[j], 0 & mask, carry);
 
+    return out;
 }
 
 // Reduce once: if a >= b, then return a - b, otherwise a
@@ -334,7 +345,7 @@ constexpr std::array<digit_t, K> reduce_once(const std::array<digit_t, N>& in1, 
     std::array<digit_t, K> out = {};
 
     if (compare(in1, in2) >= 0) {
-        out = sub<K, N, M>(in1, in2);
+        out = mp_sub<K, N, M>(in1, in2);
     }
     else {
         for (size_t i = 0; i < min_nk; i++) {
@@ -420,15 +431,18 @@ constexpr std::array<digit_t, N + 1> mp_mul_digit(const std::array<digit_t, N>& 
         ADDC(out[i], out[i], temp[i-1], carry);
 
     ADDC(out[N], 0, temp[N-1], carry);
+    return out;
+
+    return out;
 }
 
 
 // Montgomery reduction
 // Input: a in [0, R*p - 1], where R = 2^(RADIX * N)
 // Output: aR^(-1) mod p in [0, p - 1]
-template<size_t N>
-constexpr std::array<digit_t, N> montgomery_reduce(const std::array<digit_t, 2 * N>& in) {
-    static_assert(N == Prime::NWORDS, "montgomery_reduce: N must equal Prime::NWORDS");
+template<typename Prime>
+constexpr std::array<digit_t, Prime::NWORDS> montgomery_reduce(const std::array<digit_t, 2 * Prime::NWORDS>& in) {
+    constexpr size_t N = Prime::NWORDS;
 
     std::array<digit_t, N> out = {};
     constexpr auto& p = Prime::p;
@@ -440,8 +454,8 @@ constexpr std::array<digit_t, N> montgomery_reduce(const std::array<digit_t, 2 *
 
     for (size_t i = 0; i < N; i++) temp_1[i] = in[i];
 
-    temp_0 = mp_mul(temp_1, ip);
-    temp_2 = mp_mul(temp_0, p);
+    temp_0 = mp_mul<N, N, N>(temp_1, ip);
+    temp_2 = mp_mul<2 * N, N, N>(temp_0, p);
 
     borrow = 0;
     for (size_t i = 0; i < N; i++) {
@@ -459,6 +473,8 @@ constexpr std::array<digit_t, N> montgomery_reduce(const std::array<digit_t, 2 *
     for (size_t i = 0; i < N; i++) {
         ADDC(out[i], out[i], p[i] & mask, carry);
     }
+
+    return out;
 }
 
 
@@ -467,53 +483,53 @@ constexpr std::array<digit_t, N> montgomery_reduce(const std::array<digit_t, 2 *
 // Barrett reduction
 // Input: a in [0, (R << A words) - 1], where R = 2^(RADIX * N)
 // Output: a mod p in [0, p - 1]
-template<size_t N, size_t A>
-constexpr std::array<digit_t, N> barrett_reduce(const std::array<digit_t, N + A>& in) {
-    static_assert(N == Prime::NWORDS, "barrett_reduce: N must equal Prime::NWORDS");
+// template<size_t N, size_t A>
+// constexpr std::array<digit_t, N> barrett_reduce(const std::array<digit_t, N + A>& in) {
+//     static_assert(N == Prime::NWORDS, "barrett_reduce: N must equal Prime::NWORDS");
 
-    std::array<digit_t, N> out = {};
-    constexpr auto& p = Prime::p;
-    constexpr auto& mu = Prime::barrett_mu;
-    std::array<digit_t, A + 1> temp_0 = {};
-    std::array<digit_t, N> temp_1 = {};
-    std::array<digit_t, 2 * N> temp_2 = {};
-    digit_t mask, borrow, carry, waste;
+//     std::array<digit_t, N> out = {};
+//     constexpr auto& p = Prime::p;
+//     constexpr auto& mu = Prime::barrett_mu;
+//     std::array<digit_t, A + 1> temp_0 = {};
+//     std::array<digit_t, N> temp_1 = {};
+//     std::array<digit_t, 2 * N> temp_2 = {};
+//     digit_t mask, borrow, carry, waste;
 
-    for (size_t i = 0; i < A + 1; i++)
-        temp_0[i] = in[i + N - 1];
+//     for (size_t i = 0; i < A + 1; i++)
+//         temp_0[i] = in[i + N - 1];
     
-    temp_0 = mp_mul(temp_1, ip);
-    temp_2 = mp_mul(temp_0, p);
+//     temp_0 = mp_mul(temp_1, ip);
+//     temp_2 = mp_mul(temp_0, p);
 
-    borrow = 0;
-    for (size_t i = 0; i < N; i++)
-        SUBC(waste, in[i], temp_2[i], borrow);
+//     borrow = 0;
+//     for (size_t i = 0; i < N; i++)
+//         SUBC(waste, in[i], temp_2[i], borrow);
 
-    for (size_t i = 0; i < N; i++)
-        SUBC(out[i], in[N + i], temp_2[N + i], borrow);
+//     for (size_t i = 0; i < N; i++)
+//         SUBC(out[i], in[N + i], temp_2[N + i], borrow);
 
-    // In case of underflow, add p back
-    // Result will overflow and negate the underflow
-    // so it will end in [0, p-1]
-    mask = 0 - borrow;
-    carry = 0;
-    for (size_t i = 0; i < N; i++)
-        ADDC(out[i], out[i], p[i] & mask, carry);
+//     // In case of underflow, add p back
+//     // Result will overflow and negate the underflow
+//     // so it will end in [0, p-1]
+//     mask = 0 - borrow;
+//     carry = 0;
+//     for (size_t i = 0; i < N; i++)
+//         ADDC(out[i], out[i], p[i] & mask, carry);
 
-}
+// }
 
 
 
 // Barrett reduction
 // Input: a in [0, (1 << 2*N words) - 1]
 // Output: a mod p in [0, p - 1]
-template<size_t N>
-constexpr std::array<digit_t, N> barrett_reduce(const std::array<digit_t, 2*N>& in) {
-    static_assert(N == Prime::NWORDS, "barrett_reduce: N must equal Prime::NWORDS");
+template<typename Prime>
+constexpr std::array<digit_t, Prime::NWORDS> barrett_reduce(const std::array<digit_t, 2*Prime::NWORDS>& in) {
+    constexpr size_t N = Prime::NWORDS;
 
     std::array<digit_t, N> out = {};
     constexpr auto& p = Prime::p;
-    constexpr auto& mu = Prime::barrett_mu;
+    constexpr auto& barrett_mu = Prime::barrett_mu;
     std::array<digit_t, N + 1> temp_0 = {};
     std::array<digit_t, N + 1> temp_2 = {};
     std::array<digit_t, 2*N + 1> temp_4 = {};
@@ -540,6 +556,7 @@ constexpr std::array<digit_t, N> barrett_reduce(const std::array<digit_t, 2*N>& 
     for (size_t i = 0; i < N; i++)
         ADDC(out[i], out[i], p[i] & mask, carry);
 
+    return out;
 }
 
 
@@ -621,7 +638,7 @@ constexpr std::array<digit_t, N> mp_div_digit(const std::array<digit_t, N>& in, 
 
     for(int i = N - 1; i >= 0; i--) {
         temp_lo = in[i];
-        DIV(quo, rem, temp_hi, temp_lo, digit);
+        DIVR(quo, rem, temp_hi, temp_lo, digit);
         out[i] = quo;
         temp_hi = rem;
     }
@@ -647,8 +664,7 @@ constexpr digit_t approx_div_small_quotient(const std::array<digit_t, N + 1>& in
 
     std::array<digit_t, 2> quo = {};
     std::array<digit_t, 2> rem = {};
-    std::array<digit_t, 3> one = {};    one[0] = 1;
-    std::array<digit_t, 3> zero = {};
+    std::array<digit_t, 2> one = {};    one[0] = 1;
     std::array<digit_t, 3> temp_0 = {};
     std::array<digit_t, 3> temp_1 = {};
 
@@ -660,8 +676,8 @@ constexpr digit_t approx_div_small_quotient(const std::array<digit_t, N + 1>& in
 
     for(size_t i = 0; i < 2 && (quo[1] > 0 || compare(temp_0, temp_1) > 0); i++){        
         
-        quo = mp_sub<3, 3, 3>(quo, one);
-        rem = mp_add<3, 2, 2>(rem, in2[N-1]);
+        quo = mp_sub<2, 2, 2>(quo, one);
+        rem = mp_add<2, 2, 2>(rem, in2[N-1]);
 
         if(rem[1] != 0) {
             break;

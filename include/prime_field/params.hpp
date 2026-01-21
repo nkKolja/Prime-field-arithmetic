@@ -40,7 +40,7 @@ constexpr std::array<digit_t, N> compute_nip(const std::array<digit_t, N>& p) {
     // Negate
     std::array<digit_t, N> zero = {};
 
-    std::array<digit_t, N> out = sub<N, N, N>(zero, p_inv);
+    std::array<digit_t, N> out = mp_sub<N, N, N>(zero, p_inv);
     return out;
 }
 
@@ -64,7 +64,7 @@ constexpr std::array<digit_t, N> compute_pm1_half(const std::array<digit_t, N>& 
     std::array<digit_t, N> one = {};
     one[0] = 1;
     
-    std::array<digit_t, N> temp = sub<N, N, N>(p, one);
+    std::array<digit_t, N> temp = mp_sub<N, N, N>(p, one);
     std::array<digit_t, N> out = rshift<N, N>(temp, 1);
     return out;
 }
@@ -75,7 +75,7 @@ constexpr std::array<digit_t, N> compute_pp1_half(const std::array<digit_t, N>& 
     std::array<digit_t, N> one = {};
     one[0] = 1;
     
-    std::array<digit_t, N + 1> temp = add<N + 1, N, N>(p, one);
+    std::array<digit_t, N + 1> temp = mp_add<N + 1, N, N>(p, one);
     std::array<digit_t, N> out = rshift<N, N + 1>(temp, 1);
     return out;
 }
@@ -87,7 +87,7 @@ constexpr std::array<digit_t, N> compute_pp1_quarter(const std::array<digit_t, N
     std::array<digit_t, N> one = {};
     one[0] = 1;
     
-    std::array<digit_t, N + 1> temp = add<N + 1, N, N>(p, one);
+    std::array<digit_t, N + 1> temp = mp_add<N + 1, N, N>(p, one);
     std::array<digit_t, N> out = rshift<N, N + 1>(temp, 2);
     return out;
 }
@@ -99,7 +99,7 @@ constexpr std::array<digit_t, N> compute_pm2(const std::array<digit_t, N>& p) {
     std::array<digit_t, N> two = {};
     two[0] = 2;
     
-    std::array<digit_t, N> out = sub<N, N, N>(p, two);
+    std::array<digit_t, N> out = mp_sub<N, N, N>(p, two);
     return out;
 }
 
