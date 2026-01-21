@@ -1,7 +1,6 @@
 #pragma once
 
 #include "types.hpp"
-#include "detail/params_helpers.hpp"
 #include <array>
 
 namespace prime_field {
@@ -104,6 +103,19 @@ constexpr std::array<digit_t, N> compute_pm2(const std::array<digit_t, N>& p) {
     return out;
 }
 
+// Compute floor(2^(2 * RADIX * N) / p)
+template<size_t N>
+constexpr std::array<digit_t, N + 1> compute_barrett_mu(const std::array<digit_t, N>& p) {
+    std::array<digit_t, 2 * N + 1> R2N = {};
+    R2N[N] = 1;
+
+    std::array<digit_t, N + 2> temp = mp_div<N + 2, 2*N + 1, N>(R2N, p);
+    std::array<digit_t, N + 1> out = {};
+    for (size_t i = 0; i < N + 1; i++)
+        out[i] = temp[i];
+
+    return out;
+}
 
 // Define a Prime struct from just the prime array at compile-time
 template<digit_t... PrimeDigits>
@@ -114,8 +126,8 @@ struct PrimeParameters {
     // Static check: highest word must not be zero
     static_assert(p[NWORDS - 1] != 0, "Highest word of prime must not be zero");
     
-    // Calculate NBITS = (NWORDS - 1) * RADIX + highest_bit_position(highest_word)
-    static constexpr size_t NBITS = (NWORDS - 1) * RADIX + highest_bit_position(p[NWORDS - 1]);
+    // Calculate NBITS = number of bits needed to represent p
+    static constexpr size_t NBITS = bitsize(p);
     
     // Essential Montgomery parameters (only 4 needed)
     static constexpr std::array<digit_t, NWORDS> Mont_one = compute_Mont_one(p);
@@ -129,6 +141,7 @@ struct PrimeParameters {
     static constexpr std::array<digit_t, NWORDS> pp1_half = compute_pp1_half(p);
     static constexpr std::array<digit_t, NWORDS> pp1_quarter = compute_pp1_quarter(p);
     static constexpr std::array<digit_t, NWORDS> pm2 = compute_pm2(p);
+    static constexpr std::array<digit_t, NWORDS + 1> barrett_mu = compute_barrett_mu(p);
 };
 
 // Helper macro to define a prime from just the digits
