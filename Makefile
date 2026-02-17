@@ -1,4 +1,4 @@
-.PHONY: all clean test bench test_all bench_all example
+.PHONY: all clean test bench test_all bench_all example test_primitives test_mp bench_div
 
 CXX = g++
 CXXFLAGS = -std=c++20 -I./include -O3 -Wfatal-errors
@@ -12,6 +12,9 @@ PRIMES = p64_0 p64_1 p128_0 p128_1 p192_0 p192_1 p256_0 p256_1 p512_0 p512_1
 # Test and benchmark binaries in build directory
 TEST_BINS = $(addprefix $(BUILD_DIR)/test_,$(PRIMES))
 BENCH_BINS = $(addprefix $(BUILD_DIR)/bench_,$(PRIMES))
+PRIMITIVES_TEST = $(BUILD_DIR)/test_primitives
+MP_TEST = $(BUILD_DIR)/test_mp
+DIV_BENCH = $(BUILD_DIR)/bench_div
 
 # Dependencies
 DEPS = include/prime_field/field_element.hpp \
@@ -49,8 +52,41 @@ endef
 $(foreach prime,$(PRIMES),$(eval $(call make_test_target,$(prime))))
 $(foreach prime,$(PRIMES),$(eval $(call make_bench_target,$(prime))))
 
+# Build primitives test
+$(PRIMITIVES_TEST): tests/test_primitives.cpp include/common/primitives.hpp include/common/types.hpp include/common/config.hpp | $(BUILD_DIR)
+	@echo "Building primitives test..."
+	@$(CXX) $(CXXFLAGS) -o $@ tests/test_primitives.cpp
+
+# Primitives test convenience target
+test_primitives: $(PRIMITIVES_TEST)
+	@echo ""
+	@echo "Running primitives test..."
+	@$(PRIMITIVES_TEST)
+
+# Build mp library test
+$(MP_TEST): tests/test_mp.cpp include/mp/mp.hpp include/mp/*.hpp include/common/primitives.hpp include/common/types.hpp include/common/config.hpp | $(BUILD_DIR)
+	@echo "Building mp library test..."
+	@$(CXX) $(CXXFLAGS) -o $@ tests/test_mp.cpp
+
+# MP library test convenience target
+test_mp: $(MP_TEST)
+	@echo ""
+	@echo "Running mp library test..."
+	@$(MP_TEST)
+
+# Build division benchmark
+$(DIV_BENCH): benchmarks/bench_div.cpp include/mp/arithmetic.hpp include/common/primitives.hpp include/common/types.hpp include/common/config.hpp | $(BUILD_DIR)
+	@echo "Building division benchmark..."
+	@$(CXX) $(CXXFLAGS) -o $@ benchmarks/bench_div.cpp
+
+# Division benchmark convenience target
+bench_div: $(DIV_BENCH)
+	@echo ""
+	@echo "Running division benchmark..."
+	@$(DIV_BENCH)
+
 # Build and run all tests
-test_all: $(TEST_BINS)
+test_all: $(TEST_BINS) test_primitives test_mp
 	@for test in $(TEST_BINS); do \
 		echo ""; \
 		echo "Running $$test..."; \
@@ -84,7 +120,10 @@ help:
 	@echo "Available targets:"
 	@echo "  make            - Build all tests"
 	@echo "  make test       - Run all tests"
+	@echo "  make test_primitives - Run primitives test"
+	@echo "  make test_mp    - Run mp library test"
 	@echo "  make bench      - Run all benchmarks"
+	@echo "  make bench_div  - Run division benchmark"
 	@echo "  make test_<prime>  - Build and run test for specific prime (e.g., test_p64_0)"
 	@echo "  make bench_<prime> - Build and run benchmark for specific prime (e.g., bench_p64_0)"
 	@echo "  make clean      - Remove build directory"
