@@ -297,7 +297,7 @@ quo (K words) = (num / den) mod K words
 ------
 Notes:
 DIVISION IS NOT CONSTANT TIME AND SHOULD NOT BE USED IN CRYPTOGRAPHIC CONTEXTS */
-template<size_t K, size_t N, size_t M>
+template<size_t K, size_t M, size_t N>
 MP_FORCE_INLINE constexpr void mp_div_q(    
     std::array<digit_t, K>& quo,
     const std::array<digit_t, M>& num,

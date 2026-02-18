@@ -20,8 +20,7 @@ DIV_BENCH = $(BUILD_DIR)/bench_div
 DEPS = include/prime_field/field_element.hpp \
        include/prime_field/field_element.tpp \
        include/prime_field/params.hpp \
-       include/prime_field/types.hpp \
-       include/prime_field/detail/helpers.hpp \
+       include/prime_field/montgomery.hpp \
        $(wildcard include/prime_field/primes/*.hpp)
 
 all: test_all
@@ -33,7 +32,7 @@ $(BUILD_DIR):
 # Pattern rule for test binaries
 $(BUILD_DIR)/test_%: tests/tests.cpp $(DEPS) | $(BUILD_DIR)
 	@echo "Building test for $*..."
-	@$(CXX) $(CXXFLAGS) -DPRIME_TYPE=$(shell echo $* | tr 'a-z' 'A-Z') -o $@ $<
+	$(CXX) $(CXXFLAGS) -DPRIME_TYPE=$(shell echo $* | tr 'a-z' 'A-Z') -o $@ $<
 
 # Pattern rule for benchmark binaries
 $(BUILD_DIR)/bench_%: benchmarks/bench.cpp $(DEPS) | $(BUILD_DIR)

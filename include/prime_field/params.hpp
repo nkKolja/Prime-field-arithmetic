@@ -1,10 +1,13 @@
 #pragma once
 
-#include "types.hpp"
+#include "../common/types.hpp"
 #include <array>
 
 namespace prime_field {
 namespace montgomery {
+
+using namespace mp;
+
 
 ////////////////////////////////////////
 /// MONTGOMERY PARAMETER COMPUTATION ///
@@ -15,7 +18,7 @@ template<size_t N>
 constexpr std::array<digit_t, N> compute_Mont_one(const std::array<digit_t, N>& p) {
     std::array<digit_t, N + 1> mont_one_full = {}; mont_one_full[N] = 1;
     std::array<digit_t, N> mont_one_reduced = {};
-    mp_div_r<N, N + 1, N>(mont_one_reduced, mont_one_full, p);
+    mp_div_r<N, N + 1>(mont_one_reduced, mont_one_full, p);
 
     return mont_one_reduced;
 }
@@ -25,7 +28,7 @@ template<size_t N>
 constexpr std::array<digit_t, N> compute_R2(const std::array<digit_t, N>& p) {
     std::array<digit_t, 2 * N + 1> mont_two_full = {}; mont_two_full[2 * N] = 1;
     std::array<digit_t, N> mont_two_reduced = {};
-    mp_div_r<N, 2 * N + 1, N>(mont_two_reduced, mont_two_full, p);
+    mp_div_r<N, 2 * N + 1>(mont_two_reduced, mont_two_full, p);
 
     return mont_two_reduced;
 }
@@ -35,7 +38,7 @@ template<size_t N>
 constexpr std::array<digit_t, N> compute_R3(const std::array<digit_t, N>& p) {
     std::array<digit_t, 3 * N + 1> mont_three_full = {}; mont_three_full[3 * N] = 1;
     std::array<digit_t, N> mont_three_reduced = {};
-    mp_div_r<N, 3 * N + 1, N>(mont_three_reduced, mont_three_full, p);
+    mp_div_r<N, 3 * N + 1>(mont_three_reduced, mont_three_full, p);
 
     return mont_three_reduced;
 }
@@ -135,12 +138,12 @@ constexpr bool compute_3p_overflow(const std::array<digit_t, N>& p) {
 
 
 // Compute floor(2^(2 * RADIX * N) / p)
-template<size_t N, size_t A>
-constexpr std::array<digit_t, A + 1> compute_barrett_mu(const std::array<digit_t, N>& p) {
-    std::array<digit_t, N + A + 1> RNA = {};    RNA[N + A] = 1;
-    std::array<digit_t, A + 1> out = {};
+template<size_t N, size_t AA>
+constexpr std::array<digit_t, AA + 1> compute_barrett_mu(const std::array<digit_t, N>& p) {
+    std::array<digit_t, N + AA + 1> RNA = {};    RNA[N + AA] = 1;
+    std::array<digit_t, AA + 1> out = {};
     
-    mp_div_q<A + 1, N + A + 1, N>(out, RNA, p);
+    mp_div_q<AA + 1, N + AA + 1, N>(out, RNA, p);
 
     return out;
 }
@@ -150,22 +153,21 @@ constexpr std::array<digit_t, A + 1> compute_barrett_mu(const std::array<digit_t
 // Check the Barrett reduction quotent approximation factor
 // If true the quotient approximation is at most off by one
 // Otherwise it is at most off by two
-template<size_t N, size_t A>
+template<size_t N, size_t AA>
 constexpr int compute_barrett_appx_factor(const std::array<digit_t, N>& p) {
-    std::array<digit_t, N + A + 1> two_pow_na1 = {};
-    std::array<digit_t, A + 1> quo = {};
+    std::array<digit_t, N + AA + 1> two_pow_na1 = {};
+    std::array<digit_t, AA + 1> quo = {};
     std::array<digit_t, N> rem = {};
-    two_pow_na1[N + A] = 1;
+    two_pow_na1[N + AA] = 1;
     
-    std::array<digit_t, N + 1> res = {};
-    // 2^(RADIX * (N+A)) = p * quo + rem
-    mp_div_qr<A + 1, A + 1, N + A + 1, N>(quo, rem, two_pow_na1, p);
+    // 2^(RADIX * (N+AA)) = p * quo + rem
+    mp_div_qr<AA + 1, N, N + AA + 1>(quo, rem, two_pow_na1, p);
 
     std::array<digit_t, N> two_pow_nm1 = {};
-    std::array<digit_t, N> res = {};
+    std::array<digit_t, N + 1> res = {};
     two_pow_nm1[N - 1] = 1;
 
-    mp_add<N + 1, N, N>(res, two_pow_nm1, rem);
+    mp_add(res, two_pow_nm1, rem);
 
     if (mp_compare<N + 1, N>(res, p) <= 0) {
         return 1;
@@ -203,9 +205,8 @@ struct PrimeParameters {
     static constexpr std::array<digit_t, NWORDS> pm2 = compute_pm2(p);
 
     // Essential Barrett parameters
-    static constexpr std::array<digit_t, NWORDS + 1> barrett_mu = compute_barrett_mu(p);
-    static constexpr bool 3p_overflow = compute_3p_overflow(p);
-    static constexpr bool 2p_overflow = compute_2p_overflow(p);
+    static constexpr bool px3_overflow = compute_3p_overflow(p);
+    static constexpr bool px2_overflow = compute_2p_overflow(p);
 
 };
 

@@ -8,7 +8,10 @@
 #include "primitives.hpp"
 #include "comparison.hpp"
 #include "logic.hpp"
-#include "arithmetic.hpp"
+#include "addition.hpp"
+#include "subtraction.hpp"
+#include "multiplication.hpp"
+#include "division.hpp"
 
 namespace mp {
     // All functions are now available through individual headers
