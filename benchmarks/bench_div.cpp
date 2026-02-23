@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
-#include "../include/mp/arithmetic.hpp"
+#include "../include/mp/mp.hpp"
 #include "../include/common/types.hpp"
 
 using namespace mp;
