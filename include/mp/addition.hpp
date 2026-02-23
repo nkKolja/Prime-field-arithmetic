@@ -139,7 +139,7 @@ constexpr void mp_addc_and_divide(  std::array<digit_t, K>& out,
                                     const std::array<digit_t, N>& in1,
                                     const std::array<digit_t, M>& in2) {
 
-    digit_t temp;
+    digit_t temp = 0;
 
     // Add the first word of in1 and in2, along with the carry
     // This is only to check if there will be a carry propagation
@@ -171,7 +171,7 @@ template<size_t K, size_t N, size_t M>
 constexpr void mp_add_and_divide(   std::array<digit_t, K>& out,
                                     const std::array<digit_t, N>& in1,
                                     const std::array<digit_t, M>& in2) {
-    digit_t sink;
+    digit_t sink = 0;
     digit_t carry = 0;
     // Add the first word of in1 and in2
     // This is only to check if there will be a carry propagation

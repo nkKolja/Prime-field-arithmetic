@@ -28,7 +28,7 @@ MP_FORCE_INLINE constexpr void mp_mul(  std::array<digit_t, K>& out,
                                         const std::array<digit_t, N>& in1,
                                         const std::array<digit_t, M>& in2) {
     digit_t t = 0, u = 0, v = 0;
-    digit_t hi, lo, carry;
+    digit_t hi = 0, lo = 0, carry = 0;
 
     for (size_t i = 0; i < K; i++) {
         size_t min_j = (i + 1 < M) ? 0 : (i - M + 1);
@@ -65,7 +65,7 @@ MP_FORCE_INLINE constexpr void mp_mul_high(
 {
     static_assert(K <= N + M, "K must be less than or equal to N + M for mp_mul_high");
     digit_t t = 0, u = 0, v = 0;
-    digit_t hi, lo, carry;
+    digit_t hi = 0, lo = 0, carry = 0;
 
     for (size_t i = 0; i < N + M; i++) {
         size_t min_j = (i + 1 < M) ? 0 : (i - M + 1);

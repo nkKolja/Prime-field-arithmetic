@@ -132,7 +132,7 @@ MP_FORCE_INLINE constexpr void mp_sub_conditional(  std::array<digit_t, K>& out,
         subc(out[i], borrow, a, b);
     }
     if constexpr (N > K) {
-        digit_t sink;
+        digit_t sink = 0;
         for (size_t i = K; i < N; i++) {
             digit_t b = (i < M) ? in2[i] : 0;
             subc(sink, borrow, in1[i], b);
@@ -167,7 +167,7 @@ MP_FORCE_INLINE constexpr void mp_sub_conditional(  std::array<digit_t, K>& out,
         subc(out[i], borrow, a, b);
     }
     if constexpr (N > K) {
-        digit_t sink;
+        digit_t sink = 0;
         for (size_t i = K; i < N; i++) {
             digit_t b = (i == 0) ? in2 : 0;
             subc(sink, borrow, in1[i], b);

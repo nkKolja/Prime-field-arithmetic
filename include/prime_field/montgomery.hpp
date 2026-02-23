@@ -27,7 +27,7 @@ constexpr void montgomery_reduce(std::array<digit_t, Prime::NWORDS> & out, const
     std::array<digit_t, N> temp_0 = {};
     std::array<digit_t, N> temp_1 = {};
     std::array<digit_t, 2 * N> temp_2 = {};
-    digit_t mask, borrow, carry, waste;
+    digit_t mask = 0, borrow = 0, carry = 0, waste = 0;
 
     for (size_t i = 0; i < N; i++) temp_1[i] = in[i];
 
@@ -68,7 +68,7 @@ constexpr void barrett_reduce(std::array<digit_t, Prime::NWORDS>& out, const std
     constexpr size_t N = Prime::NWORDS;
     constexpr auto& p = Prime::p;
     constexpr auto barrett_mu = prime_field::montgomery::compute_barrett_mu<N, A>(p);
-    constexpr auto barrett_appx_factor = prime_field::montgomery::compute_barrett_appx_factor<N, A>(p);
+    constexpr int barrett_appx_factor = prime_field::montgomery::compute_barrett_appx_factor<N, A>(p);
     constexpr auto X = N - 1;
 
     if constexpr (N == 0) {
@@ -81,8 +81,6 @@ constexpr void barrett_reduce(std::array<digit_t, Prime::NWORDS>& out, const std
     // std::array<digit_t, N + 2*A + 1 - X> temp_2 = {};    // t_0 * t_1 not needed
     std::array<digit_t, A + 1> temp_3 = {};
     // std::array<digit_t, N + A + 1> temp_4 = {};
-
-    digit_t mask, borrow, carry;
 
     // Read highest A + 1 words of input (overflow bits)
     for (size_t i = 0; i < A + 1; i++)

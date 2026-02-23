@@ -19,7 +19,7 @@ template void inv(FieldElement<P512_0>&, const FieldElement<P512_0>&);
 template void sqrt(FieldElement<P512_0>&, const FieldElement<P512_0>&);
 template int legendre(const FieldElement<P512_0>&);
 template FieldElement<P512_0> random<P512_0>();
-template FieldElement<P512_0> to_montgomery<P512_0>(const std::array<digit_t, P512_0::NWORDS>&);
-template std::array<digit_t, P512_0::NWORDS> from_montgomery<P512_0>(const FieldElement<P512_0>&);
+template void to_montgomery<P512_0>(FieldElement<P512_0>&, const std::array<digit_t, P512_0::NWORDS>&);
+template void from_montgomery<P512_0>(std::array<digit_t, P512_0::NWORDS>&, const FieldElement<P512_0>&);
 
 } // namespace prime_field

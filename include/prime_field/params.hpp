@@ -1,11 +1,13 @@
 #pragma once
 
 #include "../common/types.hpp"
+#include "../mp/mp.hpp"
 #include <array>
 
 namespace prime_field {
 namespace montgomery {
 
+using namespace common;
 using namespace mp;
 
 
@@ -47,12 +49,12 @@ constexpr std::array<digit_t, N> compute_R3(const std::array<digit_t, N>& p) {
 template<size_t N>
 constexpr std::array<digit_t, N> compute_nip(const std::array<digit_t, N>& p) {
     // Invert
-    std::array<digit_t, N> p_inv;
+    std::array<digit_t, N> p_inv = {};
     mp_inv_mod<N, N>(p_inv, p);
 
     // Negate
     std::array<digit_t, N> zero = {};
-    std::array<digit_t, N> out;
+    std::array<digit_t, N> out = {};
     mp_sub<N, N, N>(out, zero, p_inv);
 
     return out;
@@ -62,7 +64,7 @@ constexpr std::array<digit_t, N> compute_nip(const std::array<digit_t, N>& p) {
 template<size_t N>
 constexpr std::array<digit_t, N> compute_ip(const std::array<digit_t, N>& p) {
     // Invert
-    std::array<digit_t, N> out;
+    std::array<digit_t, N> out = {};
     mp_inv_mod<N, N>(out, p);
     return out;
 }

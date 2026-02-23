@@ -316,9 +316,6 @@ MP_FORCE_INLINE constexpr size_t bitsize(digit_t x) {
 // The bitsize of the array, e.g. number of bits needed to represent it
 template<size_t N>
 MP_FORCE_INLINE constexpr size_t bitsize(const std::array<digit_t, N>& in) {
-    size_t out = 0;
-    bool flag = false;
-
     for (size_t i = N; i-- > 0; ) {
         if (in[i] != 0) {
             return i * RADIX + bitsize(in[i]);
@@ -337,7 +334,7 @@ MP_FORCE_INLINE constexpr size_t bitsize(const std::array<digit_t, N>& in) {
 MP_FORCE_INLINE constexpr size_t ct_bitsize(const digit_t in) {
     size_t out = 0;
     size_t in_copy = in;
-    size_t mask, shift;
+    size_t mask = 0, shift = 0;
 
     // if (in >> 32) == 0; out += 32; in >>= 32;
     // if (in >> 16) == 0; out += 16; in >>= 16;
@@ -358,7 +355,7 @@ MP_FORCE_INLINE constexpr size_t ct_bitsize(const digit_t in) {
 template<size_t N>
 MP_FORCE_INLINE constexpr size_t ct_bitsize(const std::array<digit_t, N>& in) {
     size_t out = 0, flag = 0;
-    digit_t temp, mask = -1;
+    digit_t temp = 0, mask = -1;
 
     for (size_t i = N; i-- > 0; ) {
         conditional_select(temp, mask, in[i], flag);

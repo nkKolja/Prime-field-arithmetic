@@ -377,9 +377,9 @@ MP_FORCE_INLINE constexpr void fdiv_21_qr(
     const digit_t den,
     const digit_t apx) 
 {
-    digit_t quo_hi, quo_lo;
-    digit_t temp;
-    digit_t carry, bflag, mask, t0, t1;
+    digit_t quo_hi = 0, quo_lo = 0;
+    digit_t temp = 0;
+    digit_t carry = 0, bflag = 0, mask = 0, t0 = 0, t1 = 0;
 
     // Algorithm 4 in Möller and Granlund 2011
     mul(quo_hi, quo_lo, num_hi, apx);
@@ -439,9 +439,8 @@ MP_FORCE_INLINE constexpr void apx_32(
     const digit_t den_hi,
     const digit_t den_lo)
 {
-    digit2_t num = MAX_DIGIT2;
-    digit_t v, p, temp0, temp1;
-    digit_t carry, mask1, mask2, bflag, t0, t1, t2;
+    digit_t v = 0, p = 0, temp0 = 0, temp1 = 0;
+    digit_t carry = 0, mask1 = 0, mask2 = 0, bflag = 0, t0 = 0, t1 = 0, t2 = 0;
 
     apx_21(v, den_hi);
     mul_lo(p, den_hi, v);
@@ -517,10 +516,10 @@ MP_FORCE_INLINE constexpr void fdiv_32_qr(
     const digit_t den_lo,
     const digit_t apx)
 {
-    digit_t quo_hi, quo_lo;
-    digit_t temp0, temp1;
-    digit_t carry, borrow, bflag, mask;
-    digit_t t0, t1;
+    digit_t quo_hi = 0, quo_lo = 0;
+    digit_t temp0 = 0, temp1 = 0;
+    digit_t carry = 0, borrow = 0, bflag = 0, mask = 0;
+    digit_t t0 = 0, t1 = 0;
 
     mul(quo_hi, quo_lo, num_hi, apx);
 

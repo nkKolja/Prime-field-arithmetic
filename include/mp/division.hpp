@@ -40,8 +40,8 @@ MP_FORCE_INLINE constexpr void mp_div_digit_qr(
     const std::array<digit_t, N>& num,
     const digit_t& digit) 
 {
-    digit_t quo_digit;
-    digit_t temp_hi = 0, temp_lo;
+    digit_t quo_digit = 0;
+    digit_t temp_hi = 0, temp_lo = 0;
     for(int i = N; i-- >0; ) {
         temp_lo = num[i];
         div_qr(quo_digit, rem, temp_hi, temp_lo, digit);
@@ -68,7 +68,7 @@ MP_FORCE_INLINE constexpr void mp_div_digit_q(
     const std::array<digit_t, N>& num,
     const digit_t& digit) 
 {
-    digit_t rem_digit;
+    digit_t rem_digit = 0;
     mp_div_digit_qr(quo, rem_digit, num, digit);
 }
 
@@ -90,7 +90,7 @@ MP_FORCE_INLINE constexpr void mp_div_digit_r(
     const std::array<digit_t, N>& num,
     const digit_t& digit) 
 {
-    digit_t temp_hi = 0, temp_lo;
+    digit_t temp_hi = 0, temp_lo = 0;
     for(int i = N; i-- >0; ) {
         temp_lo = num[i];
         div_r(rem, temp_hi, temp_lo, digit);
@@ -128,9 +128,9 @@ MP_FORCE_INLINE constexpr void mp_fdiv_digit_qr(
 
 
     std::array<digit_t, N + 1> num_shifted = {};
-    digit_t shift, apx;
-    digit_t quo_digit;
-    digit_t num_hi, num_lo;
+    digit_t shift = 0, apx = 0;
+    digit_t quo_digit = 0;
+    digit_t num_hi = 0, num_lo = 0;
 
     shift = RADIX - bitsize(digit);
     
@@ -174,7 +174,7 @@ MP_FORCE_INLINE constexpr void mp_fdiv_digit_q(
     const digit_t& digit) 
 {
     assert(bitsize(digit) > 0);
-    digit_t rem_digit;
+    digit_t rem_digit = 0;
     mp_fdiv_digit_qr(quo, rem_digit, num, digit);
 }
 
@@ -219,7 +219,7 @@ MP_FORCE_INLINE constexpr void mp_div_qr(
 
     // Single digit division done exactly with primitive function
     if constexpr(N == 1) {
-        std::array<digit_t, M> quotient;
+        std::array<digit_t, M> quotient = {};
         mp_fdiv_digit_qr<M>(quotient, rem[0], num, den[0]);
         copy(quo, quotient);
         return;
@@ -230,8 +230,8 @@ MP_FORCE_INLINE constexpr void mp_div_qr(
     std::array<digit_t, M + 1> dividend = {};
     std::array<digit_t, N> divisor = {};
     std::array<digit_t, M - N + 1> quotient = {};
-    digit_t d_hi, d_lo;
-    digit_t apx;
+    digit_t d_hi = 0, d_lo = 0;
+    digit_t apx = 0;
 
     lshift<M + 1, M>(dividend, num, shift);
     lshift<N, N>(divisor, den, shift);
@@ -240,13 +240,13 @@ MP_FORCE_INLINE constexpr void mp_div_qr(
     apx_32(apx, d_hi, d_lo);
 
     for (int j = M - N; j >= 0; j--) {
-        digit_t qhat;
+        digit_t qhat = 0;
         digit_t num_hi = dividend[j + N];
         digit_t num_mi = dividend[j + N - 1];
         digit_t num_lo = dividend[j + N - 2];
 
-        digit_t borrow, carry;
-        digit_t sink1, sink2;
+        digit_t borrow = 0, carry = 0;
+        digit_t sink1 = 0, sink2 = 0;
         
         if (num_hi == d_hi && num_mi == d_lo) {
             qhat = MAX_DIGIT;
@@ -257,7 +257,7 @@ MP_FORCE_INLINE constexpr void mp_div_qr(
         // Multiply and subtract qhat * divisor from the dividend
         // qhat can still be off by one, this will be corrected in
         // case underflow occurs.
-        std::array<digit_t, N + 1> temp_product;
+        std::array<digit_t, N + 1> temp_product = {};
         mp_mul_digit<N>(temp_product, divisor, qhat);
 
         quotient[j] = qhat;
@@ -303,7 +303,7 @@ MP_FORCE_INLINE constexpr void mp_div_q(
     const std::array<digit_t, M>& num,
     const std::array<digit_t, N>& den)
 {
-    std::array<digit_t, N> rem;
+    std::array<digit_t, N> rem = {};
     mp_div_qr(quo, rem, num, den);
 }
 
@@ -329,7 +329,7 @@ MP_FORCE_INLINE constexpr void mp_div_r(
         copy(rem, num);
         return;
     }
-    std::array<digit_t, M - N + 1> quo;
+    std::array<digit_t, M - N + 1> quo = {};
     mp_div_qr(quo, rem, num, den);
 }
 
@@ -381,20 +381,20 @@ MP_FORCE_INLINE constexpr void mp_fdiv_21_qr(
     std::array<digit_t, M + 1> dividend = {};
     std::array<digit_t, N> divisor = {};
     std::array<digit_t, M - N + 1> quotient = {};
-    digit_t apx;
+    digit_t apx = 0;
 
     lshift<M + 1, M>(dividend, num, shift);
     lshift<N, N>(divisor, den, shift);
     apx_21(apx, divisor[N-1]);
 
     for (int j = M - N; j >= 0; j--) {
-        digit_t qhat, rhat;
+        digit_t qhat = 0, rhat = 0;
         digit_t num_hi = dividend[j + N];
         digit_t num_lo = dividend[j + N - 1];
         digit_t dhat = divisor[N - 1];
 
-        digit_t temp_hi, temp_lo, borrow, carry;
-        digit_t sink1, sink2;
+        digit_t temp_hi = 0, temp_lo = 0, borrow = 0, carry = 0;
+        digit_t sink1 = 0, sink2 = 0;
 
         
         if (num_hi == dhat) {
@@ -521,13 +521,13 @@ MP_FORCE_INLINE constexpr void mp_div_21_qr(
     lshift<N, N>(divisor, den, shift);
 
     for (int j = M - N; j >= 0; j--) {
-        digit_t qhat, rhat;
+        digit_t qhat = 0, rhat = 0;
         digit_t num_hi = dividend[j + N];
         digit_t num_lo = dividend[j + N - 1];
         digit_t dhat = divisor[N - 1];
 
-        digit_t temp_hi, temp_lo, borrow, carry;
-        digit_t sink1, sink2;
+        digit_t temp_hi = 0, temp_lo = 0, borrow = 0, carry = 0;
+        digit_t sink1 = 0, sink2 = 0;
 
         
         if (num_hi == dhat) {
@@ -627,8 +627,8 @@ MP_FORCE_INLINE constexpr void mp_inv_mod(
 {
     std::array<digit_t, K> x = {};
     std::array<digit_t, K> two = {};
-    std::array<digit_t, K> ax;
-    std::array<digit_t, K> two_minus_ax;
+    std::array<digit_t, K> ax = {};
+    std::array<digit_t, K> two_minus_ax = {};
 
     two[0] = 2;
     // Initial inverse mod 2^RADIX

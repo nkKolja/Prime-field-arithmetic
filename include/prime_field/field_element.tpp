@@ -319,7 +319,7 @@ void to_montgomery(FieldElement<Prime>& out, const std::array<digit_t, Prime::NW
     for (size_t i = 0; i < NWORDS; i++)
         temp_in[i] = in[i];
 
-    temp.data = montgomery_reduce(temp_in);
+    montgomery_reduce<Prime>(temp.data, temp_in);
     mul(out, temp, r3);
 }
 
@@ -336,7 +336,6 @@ template<typename Prime>
 bool random(FieldElement<Prime>& out) noexcept {
     constexpr size_t NWORDS = Prime::NWORDS;
     constexpr size_t AWORDS = Prime::AWORDS; // 128 bits
-    constexpr size_t LAST_BITS = (Prime::NBITS - 1) % RADIX;
     std::array<digit_t, NWORDS + AWORDS> temp;
 
     if (detail::randombytes(temp.data(),

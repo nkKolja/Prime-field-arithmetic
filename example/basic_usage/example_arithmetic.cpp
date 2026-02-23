@@ -1,6 +1,6 @@
 #include <iostream>
 #include "prime_field/field_element.hpp"
-#include "prime_field/detail/helpers.hpp"
+#include "mp/logic.hpp"
 #include "prime_field/primes/p64_0.hpp"
 
 using namespace prime_field;
@@ -9,9 +9,7 @@ int main() {
     using P = P64_0;
     using Fp = FieldElement<P>;
 
-    std::cout << "  p   = ";
-    print_array(std::cout, P::p);
-    std::cout << "\n\n";
+    std::cout << "  p   = " << P::p << "\n\n";
 
     Fp a(123);
     Fp b(456);

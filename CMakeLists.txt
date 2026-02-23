@@ -20,7 +20,7 @@ target_include_directories(prime_field INTERFACE
 )
 
 # List of all primes
-set(PRIMES p64_0 p64_1 p128_0 p128_1 p192_0 p192_1 p256_0 p256_1 p512_0 p512_1)
+set(PRIMES p32_0 p64_0 p64_1 p128_0 p128_1 p192_0 p192_1 p256_0 p256_1 p512_0 p512_1)
 
 # Create static libraries for each prime
 foreach(PRIME ${PRIMES})

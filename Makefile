@@ -136,10 +136,9 @@ clean:
 	@rm -rf $(BUILD_DIR)
 
 # Build and run the basic example
-example:test_montgomery - Run Montgomery/Barrett reduction test"
-	@echo "  make 
-	@cmake -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=Release
-	@cmake --build $(BUILD_DIR) --target example_basic_usage -- -j
+example:
+	@cmake -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=Release > /dev/null 2>&1
+	@cmake --build $(BUILD_DIR) --target example_basic_usage > /dev/null 2>&1
 	@./$(BUILD_DIR)/example/basic_usage/example_basic_usage
 
 help:
@@ -154,4 +153,6 @@ help:
 	@echo "  make bench        - Run all benchmarks"
 	@echo "  make bench_div    - Run division benchmark"
 	@echo "  make bench_<prime> - Run benchmark for specific prime (e.g., bench_p64_0)"
+	@echo "  make example      - Run basic usage example"
 	@echo "  make clean        - Remove build directory"
+	@echo "  make help         - Show this help message"

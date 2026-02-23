@@ -19,7 +19,7 @@ template void inv(FieldElement<P256_0>&, const FieldElement<P256_0>&);
 template void sqrt(FieldElement<P256_0>&, const FieldElement<P256_0>&);
 template int legendre(const FieldElement<P256_0>&);
 template FieldElement<P256_0> random<P256_0>();
-template FieldElement<P256_0> to_montgomery<P256_0>(const std::array<digit_t, P256_0::NWORDS>&);
-template std::array<digit_t, P256_0::NWORDS> from_montgomery<P256_0>(const FieldElement<P256_0>&);
+template void to_montgomery<P256_0>(FieldElement<P256_0>&, const std::array<digit_t, P256_0::NWORDS>&);
+template void from_montgomery<P256_0>(std::array<digit_t, P256_0::NWORDS>&, const FieldElement<P256_0>&);
 
 } // namespace prime_field

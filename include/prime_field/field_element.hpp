@@ -27,8 +27,8 @@ template<typename Prime> int legendre(const FieldElement<Prime>& a);
 template<typename Prime> FieldElement<Prime> random();
 template<typename Prime> void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2, bool cond);
 template<typename Prime> void conditional_swap(FieldElement<Prime>& a, FieldElement<Prime>& b, bool cond);
-template<typename Prime> FieldElement<Prime> to_montgomery(const std::array<digit_t, Prime::NWORDS>& value);
-template<typename Prime> std::array<digit_t, Prime::NWORDS> from_montgomery(const FieldElement<Prime>& a);
+template<typename Prime> void to_montgomery(FieldElement<Prime>& out, const std::array<digit_t, Prime::NWORDS>& value);
+template<typename Prime> void from_montgomery(std::array<digit_t, Prime::NWORDS>& out, const FieldElement<Prime>& a);
 
 /**
  * Type-safe field element for prime field arithmetic.
