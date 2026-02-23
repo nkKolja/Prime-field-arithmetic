@@ -1,12 +1,16 @@
 #pragma once
 
+#include <cstddef>
 #include <array>
 #include <iostream>
 #include <iomanip>
-#include "types.hpp"
-#include "detail/helpers.hpp"
+#include "../mp/mp.hpp"
+#include "montgomery.hpp"
 
 namespace prime_field {
+
+using namespace common;
+using namespace mp;
 
 // Forward declarations
 template<typename Prime> class FieldElement;
@@ -23,9 +27,9 @@ template<typename Prime> void sqrt(FieldElement<Prime>& out, const FieldElement<
 template<typename Prime> int legendre(const FieldElement<Prime>& a);
 template<typename Prime> FieldElement<Prime> random();
 template<typename Prime> void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2, bool cond);
-template<typename Prime> void conditional_swap(FieldElement<Prime>& out, const FieldElement<Prime>& in1, FieldElement<Prime>& in2, bool cond);
-template<typename Prime> FieldElement<Prime> to_montgomery(const std::array<digit_t, Prime::NWORDS>& value);
-template<typename Prime> std::array<digit_t, Prime::NWORDS> from_montgomery(const FieldElement<Prime>& a);
+template<typename Prime> void conditional_swap(FieldElement<Prime>& a, FieldElement<Prime>& b, bool cond);
+template<typename Prime> void to_montgomery(FieldElement<Prime>& out, const std::array<digit_t, Prime::NWORDS>& value);
+template<typename Prime> void from_montgomery(std::array<digit_t, Prime::NWORDS>& out, const FieldElement<Prime>& a);
 
 /**
  * Type-safe field element for prime field arithmetic.
@@ -41,11 +45,11 @@ public:
     // Constructors
     constexpr FieldElement() : data{} {}
     
-    explicit FieldElement(std::array<digit_t, NWORDS>& arr) {
+    explicit FieldElement(const std::array<digit_t, NWORDS>& arr) {
         to_montgomery(*this, arr);
     }
 
-    explicit FieldElement(digit_t value) {
+    explicit FieldElement(const digit_t value) {
         FieldElement<Prime> temp_0, r2;
         r2.data = Prime::R2;
         temp_0.data[0] = value;

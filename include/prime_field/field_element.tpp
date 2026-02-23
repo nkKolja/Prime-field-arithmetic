@@ -5,11 +5,11 @@
 
 #include <array>
 #include <stdexcept>
-#include "types.hpp"
-#include "detail/helpers.hpp"
 #include "detail/random.hpp"
 
 namespace prime_field {
+
+using namespace mp;
 
 // Modular reduction: a = a mod p
 // Input: a in [0, 2p - 1]  // NOTE THIS IS ASSUMED - DOES NOT WORK OTHERWISE
@@ -19,7 +19,7 @@ template<typename Prime>
 void reduce(FieldElement<Prime>& a) {
     constexpr auto& p = Prime::p;
 
-    mp_sub_conditional(a.data, a.data, p);
+    mp_sub_conditional<Prime::NWORDS, Prime::NWORDS, Prime::NWORDS>(a.data, a.data, p);
 }
 
 // Modular reduction: a = a mod p
@@ -36,7 +36,7 @@ void reduce_full(FieldElement<Prime>& a) {
     for (size_t i = 0; i < NWORDS; i++)
         temp_a[i] = a.data[i];
 
-    montgomery_reduce(a, temp_a);
+    montgomery_reduce<Prime>(a.data, temp_a);
     mul(a, a, r2);
 }
 
@@ -53,14 +53,15 @@ void add(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
     digit_t carry;
 
     carry = 0;
-    for(size_t i = 0; i < NWORDS; i++)
-        ADDC(out.data[i], in1.data[i], in2.data[i], carry);
+    // for(size_t i = 0; i < NWORDS; i++)
+    //     addc(out.data[i], carry, in1.data[i], in2.data[i]);
+    mp_addc(out.data, carry, in1.data, in2.data);
 
     if constexpr (Prime::NBITS == NWORDS * RADIX){
         digit_t mask = 0 - carry;
         digit_t borrow = 0;
         for(size_t i = 0; i < NWORDS; i++)
-            SUBC(out.data[i], out.data[i], p[i] & mask, borrow);
+            subc(out.data[i], borrow, out.data[i], p[i] & mask);
     }
 
     reduce(out);
@@ -75,7 +76,7 @@ template<typename Prime>
 void neg(FieldElement<Prime>& out, const FieldElement<Prime>& in) {
     const auto& p = Prime::p;
 
-    mp_sub_no_borrow(out.data, p, in.data);
+    mp_sub(out.data, p, in.data);
     reduce(out);
 }
 
@@ -92,12 +93,12 @@ void sub(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
 
     borrow = 0;
     for (size_t i = 0; i < NWORDS; i++)
-        SUBC(out.data[i], in1.data[i], in2.data[i], borrow);
+        subc(out.data[i], borrow, in1.data[i], in2.data[i]);
 
     mask = 0 - borrow;
     carry = 0;
     for (size_t i = 0; i < NWORDS; i++)
-        ADDC(out.data[i], out.data[i], p[i] & mask, carry);
+        addc(out.data[i], carry, out.data[i], p[i] & mask);
 }
 
 // Modular multiplication: c = (a * b) mod p
@@ -107,48 +108,54 @@ void sub(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
 // 
 template<typename Prime>
 void mul(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2) {
-    constexpr size_t NWORDS = Prime::NWORDS;
+    constexpr size_t N = Prime::NWORDS;
     constexpr size_t NBITS = Prime::NBITS;
     const auto& p = Prime::p;
     constexpr digit_t nip_0 = (Prime::nip)[0];
 
-    if constexpr (NBITS <= NWORDS * RADIX - 1) {
-        std::array<digit_t, NWORDS + 1> temp_c{};
-        std::array<digit_t, NWORDS + 1> temp_0{};
+    if constexpr (NBITS <= N * RADIX - 1) {
+        std::array<digit_t, N + 1> temp_c{};
+        std::array<digit_t, N + 1> temp_0{};
 
-        for (size_t j = 0; j < NWORDS; j++) {
-            digit_mul(temp_0, in1.data, in2.data[j]);
-            mp_add_no_overflow(temp_c, temp_c, temp_0);
+        for (size_t j = 0; j < N; j++) {
+            mp_mul_digit(temp_0, in1.data, in2.data[j]);
+            mp_add<N + 1, N + 1, N + 1>(temp_c, temp_c, temp_0);
 
             digit_t q = temp_c[0] * nip_0;
 
-            digit_mul(temp_0, p, q);
-            mp_add_and_divide(temp_c, temp_c, temp_0);
+            mp_mul_digit(temp_0, p, q);
+            mp_add_and_divide<N + 1, N + 1, N + 1>(temp_c, temp_c, temp_0);
         }
 
-        mp_sub_conditional(out.data, array_truncate<NWORDS>(temp_c), p);
+        mp_sub_conditional<N, N, N>(out.data, reinterpret_cast<const std::array<digit_t, N>&>(temp_c), p);
 
     } else {
 
-        std::array<digit_t, NWORDS + 2> temp_c{};
-        std::array<digit_t, NWORDS + 1> temp_0{};
+        std::array<digit_t, N + 2> temp_c{};
+        std::array<digit_t, N + 1> temp_0{};
 
-        for (size_t j = 0; j < NWORDS; j++) {
+        for (size_t j = 0; j < N; j++) {
 
-            digit_mul(temp_0, in1.data, in2.data[j]);
-            mp_add_no_overflow(temp_c, temp_c, temp_0);
+            mp_mul_digit(temp_0, in1.data, in2.data[j]);
+            mp_add<N + 2, N + 2, N + 1>(temp_c, temp_c, temp_0);
             
             digit_t q = temp_c[0] * nip_0;
 
-            digit_mul(temp_0, p, q);
-            mp_add_and_divide(temp_c, temp_c, temp_0);
+            mp_mul_digit(temp_0, p, q);
+            mp_add_and_divide<N + 2, N + 2, N + 1>(temp_c, temp_c, temp_0);
         }
 
-        mp_sub_conditional(out.data, temp_c, p);
+        mp_sub_conditional<N, N + 2, N>(out.data, temp_c, p);
     }
 }
 
 
+
+// Modular multiplication: c = (a * b) mod p
+// Inputs: a, b in [0, p - 1] in Montgomery form
+// Output: c in [0, p - 1] in Montgomery form
+// Method: Interleaved Montgomery multiplication with window of size 1
+// void montgomery_mul_windowed
 
 
 // Exponentiation: result = a^exp mod p (constant-time Montgomery ladder)
@@ -167,7 +174,7 @@ void pow(FieldElement<Prime>& result, const FieldElement<Prime>& a, const std::a
         for (int j = 63; j >= 0; j--) {
             bit = (exp[i] >> j) & 0x01;
 
-            conditional_swap(t0.data, t1.data, bit ^ prevbit);
+            mp::conditional_swap(t0.data, t1.data, bit ^ prevbit);
 
             mul(t1, t0, t1);  // t1 = t0 * t1
             mul(t0, t0, t0);  // t0 = t0 * t0
@@ -176,7 +183,7 @@ void pow(FieldElement<Prime>& result, const FieldElement<Prime>& a, const std::a
         }
     }
 
-    conditional_swap(t0.data, t1.data, prevbit);
+    mp::conditional_swap(t0.data, t1.data, prevbit);
 
     result = t0;
 }
@@ -215,6 +222,18 @@ void mul_fp2(
     add(out[0], t0, t1);
 }
 
+// Conditional select: out = (cond) ? in2 : in1 (constant-time)
+template<typename Prime>
+void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2, bool cond) {
+    mp::conditional_select(out.data, in1.data, in2.data, cond);
+}
+
+// Conditional swap: swaps a and b if cond != 0 (constant-time)
+template<typename Prime>
+void conditional_swap(FieldElement<Prime>& a, FieldElement<Prime>& b, bool cond) {
+    mp::conditional_swap(a.data, b.data, cond);
+}
+
 // Cipolla's square root finding algorithm
 template<typename Prime>
 void sqrt(FieldElement<Prime>& out, const FieldElement<Prime>& in) {
@@ -250,8 +269,8 @@ void sqrt(FieldElement<Prime>& out, const FieldElement<Prime>& in) {
         for (int j = RADIX - 1; j >= 0; j--) {
             bit = (exp[i] >> j) & 0x01;
 
-            conditional_swap(t0[0].data, t1[0].data, bit ^ prevbit);
-            conditional_swap(t0[1].data, t1[1].data, bit ^ prevbit);
+            mp::conditional_swap(t0[0].data, t1[0].data, bit ^ prevbit);
+            mp::conditional_swap(t0[1].data, t1[1].data, bit ^ prevbit);
 
             mul_fp2(t1, t0, t1, non_residue);  // t1 = t0 * t1
             mul_fp2(t0, t0, t0, non_residue);  // t0 = t0 * t0
@@ -260,8 +279,8 @@ void sqrt(FieldElement<Prime>& out, const FieldElement<Prime>& in) {
         }
     }
 
-    conditional_swap(t0[0].data, t1[0].data, prevbit);
-    conditional_swap(t0[1].data, t1[1].data, prevbit);
+    mp::conditional_swap(t0[0].data, t1[0].data, prevbit);
+    mp::conditional_swap(t0[1].data, t1[1].data, prevbit);
 
     conditional_select(out, t0[0], zero, in == zero);
 }
@@ -289,41 +308,6 @@ int legendre(const FieldElement<Prime>& a) {
     return retval;
 }
 
-// Montgomery reduction
-// Input: a in [0, R*p - 1], where R = 2^(RADIX * NWORDS)
-// Output: aR^(-1) mod p in [0, p - 1]
-template<typename Prime>
-void montgomery_reduce(FieldElement<Prime>& out, const std::array<digit_t, 2 * Prime::NWORDS>& in) {
-    constexpr size_t NWORDS = Prime::NWORDS;
-    constexpr auto& p = Prime::p;
-    constexpr auto& ip = Prime::ip;
-    std::array<digit_t, NWORDS> temp_0 = {};
-    std::array<digit_t, NWORDS> temp_1 = {};
-    std::array<digit_t, 2 * NWORDS> temp_2 = {};
-    digit_t mask, borrow, carry, waste;
-
-    for (size_t i = 0; i < NWORDS; i++) temp_1[i] = in[i];
-    
-    mp_mul_low(temp_0, temp_1, ip);
-    mp_mul(temp_2, temp_0, p);
-
-    borrow = 0;
-    for (size_t i = 0; i < NWORDS; i++) {
-        SUBC(waste, in[i], temp_2[i], borrow);
-    }
-    for (size_t i = 0; i < NWORDS; i++) {
-        SUBC(out.data[i], in[NWORDS + i], temp_2[NWORDS + i], borrow);
-    }
-
-    // In case of underflow, add p back
-    // Result will overflow and negate the underflow
-    // so it will end in [0, p-1]
-    mask = 0 - borrow;
-    carry = 0;
-    for (size_t i = 0; i < NWORDS; i++) {
-        ADDC(out.data[i], out.data[i], p[i] & mask, carry);
-    }
-}
 
 template<typename Prime>
 void to_montgomery(FieldElement<Prime>& out, const std::array<digit_t, Prime::NWORDS>& in) {
@@ -335,7 +319,7 @@ void to_montgomery(FieldElement<Prime>& out, const std::array<digit_t, Prime::NW
     for (size_t i = 0; i < NWORDS; i++)
         temp_in[i] = in[i];
 
-    montgomery_reduce(temp, temp_in);
+    montgomery_reduce<Prime>(temp.data, temp_in);
     mul(out, temp, r3);
 }
 
@@ -348,32 +332,17 @@ void from_montgomery(std::array<digit_t, Prime::NWORDS>& out, const FieldElement
     out = result.data;
 }
 
-// Conditional select: out = (cond) ? in2 : in1 (constant-time)
-template<typename Prime>
-void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2, bool cond) {
-    conditional_select(out.data, in1.data, in2.data, cond);
-}
-
-// Conditional swap: swaps a and b if cond != 0 (constant-time)
-template<typename Prime>
-void conditional_swap(FieldElement<Prime>& a, FieldElement<Prime>& b, bool cond) {
-    conditional_swap(a.data, b.data, cond);
-}
-
-
 template<typename Prime>
 bool random(FieldElement<Prime>& out) noexcept {
     constexpr size_t NWORDS = Prime::NWORDS;
-    constexpr size_t LAST_BITS = (Prime::NBITS - 1) % RADIX;
-    std::array<digit_t, 2 * NWORDS> temp;
+    constexpr size_t AWORDS = Prime::AWORDS; // 128 bits
+    std::array<digit_t, NWORDS + AWORDS> temp;
 
     if (detail::randombytes(temp.data(),
-        (2 * NWORDS) * sizeof(digit_t)) != 0)
+        (NWORDS + AWORDS) * sizeof(digit_t)) != 0)
         return false;
 
-    temp[2 * NWORDS - 1] &= ((digit_t) 1 << LAST_BITS) - 1;
-
-    montgomery_reduce(out, temp);
+    barrett_reduce<Prime, AWORDS>(out.data, temp);
     return true;
 }
 

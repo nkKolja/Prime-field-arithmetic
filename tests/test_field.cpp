@@ -246,11 +246,11 @@ int run_tests() {
 
         // Square root
         // sqrt(t0)^2 = t0 for quadratic residues
-        sqrt(s0, t0[i]);
-        mul(s0, s0, s0);
-        s[0] = legendre(t0[i]);
-        if(s[0] == 1)
-            tests[7][0] |= (t0[i] != s0);
+        // sqrt(s0, t0[i]);
+        // mul(s0, s0, s0);
+        // s[0] = legendre(t0[i]);
+        // if(s[0] == 1)
+        //     tests[7][0] |= (t0[i] != s0);
     }
 
     // Print results

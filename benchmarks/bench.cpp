@@ -9,6 +9,7 @@
 #include "../include/prime_field/field_element.hpp"
 
 // Include all prime definitions
+#include "../include/prime_field/primes/p32_0.hpp"
 #include "../include/prime_field/primes/p64_0.hpp"
 #include "../include/prime_field/primes/p64_1.hpp"
 #include "../include/prime_field/primes/p128_0.hpp"
@@ -27,7 +28,7 @@ using namespace prime_field;
 #define BATCH       1000  // Operations per timing measurement
 
 // Volatile sink prevents compiler from optimizing away function calls
-static volatile digit_t sink;
+static volatile digit_t sink = 0;
 
 // Returns nanoseconds using monotonic clock (unaffected by system time changes)
 static inline uint64_t get_time_ns() {
@@ -65,14 +66,14 @@ static void __attribute__((noinline)) bench_fun(int sel,
     int i) 
 {
     switch (sel) {
-        case 0: reduce(t0[i]); sink = t0[i].data[0]; break;
-        case 1: add(t0[i], t1[i], t0[i]); sink = t0[i].data[0]; break;
-        case 2: neg(t0[i], t0[i]); sink = t0[i].data[0]; break;
-        case 3: sub(t0[i], t1[i], t0[i]); sink = t0[i].data[0]; break;
-        case 4: mul(t0[i], t1[i], t0[i]); sink = t0[i].data[0]; break;
-        case 5: s[i] = legendre(t0[i]); sink = s[i]; break;
-        case 6: inv(t0[i], t0[i]); sink = t0[i].data[0]; break;
-        case 7: sqrt(t0[i], t0[i]); sink = t0[i].data[0]; break;
+        case 0: reduce(t0[i]); sink ^= t0[i].data[0]; break;
+        case 1: add(t0[i], t1[i], t0[i]); sink ^= t0[i].data[0]; break;
+        case 2: neg(t0[i], t0[i]); sink ^= t0[i].data[0]; break;
+        case 3: sub(t0[i], t1[i], t0[i]); sink ^= t0[i].data[0]; break;
+        case 4: mul(t0[i], t1[i], t0[i]); sink ^= t0[i].data[0]; break;
+        case 5: s[i] = legendre(t0[i]); sink ^= s[i]; break;
+        case 6: inv(t0[i], t0[i]); sink ^= t0[i].data[0]; break;
+        case 7: sqrt(t0[i], t0[i]); sink ^= t0[i].data[0]; break;
         default: break;
     }
 }
@@ -105,8 +106,8 @@ void run_benchmark(const char* prime_name) {
     }
 
     // WARMUP
-    for(int i = 0; i < WARMUP; i++){
-        mul(t0[i], t1[i], t1[i]);
+    for(int i = 1; i < WARMUP; i++){
+        mul(t0[i], t1[i], t0[i-1]);
     }
 
     // BENCHMARKING

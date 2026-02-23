@@ -22,24 +22,32 @@ make example
 - **Constant-time operations** - no data-dependent branches or operations
 - **Constant memory access** - no data-dependent memory address accesses
 - **Hybrid distribution** - pre-compiled static libraries for fast compilation, or header-only for custom primes
-- **Pre-configured primes** - Optimised primes from 64 to 512 bits (10 total)
+- **Pre-configured primes** - Optimised primes from 32 to 512 bits (11 total)
 - **Field operations** - add, sub, neg, mul, inv, div, pow, legendre, sqrt
-- **Random** - random distribution l1 distance from uniform < 2^(-64), and much smaller in general
+- **Random** - random distribution l1 distance from uniform < 2^(-128)
+
+## Requirements
+
+- C++20 compiler (GCC 10+, Clang 11+, or newer)
+- CMake 3.15+ or Make
+- Linux/macOS (limited Windows support)
+
+## Status
+
+This library is under active refactoring.
 
 ## Library Structure
 
 ```
 Prime-field-arithmetic/
-├── include/          # Header files (public API)
-│   └── prime_field/  # Namespace-organized headers
-├── lib/              # Pre-compiled static libraries
-│   ├── libprime_field_p64_0.a
-│   ├── libprime_field_p256_0.a
-│   └── ... (10 total)
-├── src/              # Template instantiations
-│   └── primes/       # One .cpp per prime
-├── tests/            # Test suite
-└── benchmarks/       # Performance benchmarks
+├── include/
+│   ├── common/          # Types and primitives
+│   ├── mp/              # Multi-precision arithmetic
+│   └── prime_field/     # Field arithmetic + primes/
+├── lib/                 # 11 pre-compiled static libraries (p32_0 to p512_1)
+├── src/primes/          # Template instantiations (.cpp per prime)
+├── tests/               # Test suite (primitives, MP, Montgomery, field)
+└── benchmarks/          # Performance benchmarks
 ```
 
 ## Current limitations
@@ -48,18 +56,22 @@ Prime-field-arithmetic/
 - **No prime-specific optimizations** - special-form primes not exploited
 - **Square root is NOT constant-time** - uses Cipolla's algorithm as temporary solution
 - **Random values are not seedable** - uses system cryptographic randomness (`/dev/urandom`)
+- **Testing vectors 64-bit only** - Testing vectors only work for 64-bit arch
 
 ## To-do
 
-- Add Barrett's reduction implementation
-- Prime field initialization from hexadecimal strings
-- Refactor Montgomery representation to use `FieldElement` for `Mont_one` and similar constants
-- Support for arbitrary-precision exponents (`std::vector<digit_t>`) and native `int` types
-- GCD-based algorithms for modular inverse and Legendre symbol computation
-- Manual rewrite of build system and documentation (remove AI-generated content)
-- Comprehensive documentation for `digit_t` usage and custom prime definition
-- ARM assembly optimizations 
-- Specialized routines for primes of a special format
+- Repair/merge the `logic.hpp` and `comparison.hpp` in `mp`.
+- Restructure the `prime_field` header files and the `random` header, moving it one level above and enabling in `mp`.
+- Repair and re-write testing and benchmarks. Introduce 32-bit test vectors.
+- Prime field initialization from hexadecimal strings.
+- Refactor Montgomery representation to use `FieldElement` for `Mont_one` and similar constants.
+- Support for arbitrary-precision exponents (`std::vector<digit_t>`) and native `int` types.
+- GCD-based algorithms for modular inverse and Legendre symbol computation.
+- Manual rewrite of build system and documentation (remove AI-generated content).
+- Comprehensive documentation for `digit_t` usage and custom prime definition.
+- Introduce new class to encapsulate both `digit_t` and `std::array<digit_t, N>`.
+- ARM assembly optimizations.
+- Specialized routines for primes of a special format.
 
 ## Comparison with C Implementation
 
@@ -75,7 +87,13 @@ Prime-field-arithmetic/
 
 ## Pre-configured Prime Fields
 
-The library includes 10 pre-configured prime fields across 5 bit sizes:
+The library includes 11 pre-configured prime fields across 6 bit sizes:
+
+### 32-bit Primes
+
+| Config | Prime | Hex Value |
+|--------|-------|-----------|
+| **P32_0** | 2^31 - 2^27 + 1 | `0x78000001` |
 
 ### 64-bit Primes
 

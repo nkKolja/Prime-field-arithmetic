@@ -43,7 +43,7 @@
 #pragma once
 
 // Core types
-#include "prime_field/types.hpp"
+#include "common/types.hpp"
 
 // Montgomery parameter computation
 #include "prime_field/params.hpp"
@@ -52,6 +52,7 @@
 #include "prime_field/field_element.hpp"
 
 // Predefined prime fields
+#include "prime_field/primes/p32_0.hpp"
 #include "prime_field/primes/p64_0.hpp"
 #include "prime_field/primes/p64_1.hpp"
 #include "prime_field/primes/p128_0.hpp"
