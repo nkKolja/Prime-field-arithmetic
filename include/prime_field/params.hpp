@@ -67,6 +67,25 @@ constexpr std::array<digit_t, N> compute_ip(const std::array<digit_t, N>& p) {
     return out;
 }
 
+// Compute iR = R^(-1) mod p where R = 2^(64 * N)
+template<size_t N>
+constexpr std::array<digit_t, N> compute_iR(const std::array<digit_t, N>& p) {
+    
+    // First compute 1/2 mod p
+    std::array<digit_t, N + 1> iR = {}; iR[0] = 1;
+
+    // N * RADIX many divisions by 2
+    for (size_t i = 0; i < N * RADIX; i++) {
+        if(iR[0] & 1) {
+            mp_add<N + 1, N + 1, N>(iR, iR, p);
+        }
+        rshift<N + 1, N + 1>(iR, iR, 1);
+    }
+    std::array<digit_t, N> out = {};
+    copy(out, iR);
+    return out;
+}
+
 
 // Compute (p-1)/2
 template<size_t N>
@@ -123,7 +142,7 @@ constexpr std::array<digit_t, N> compute_pm2(const std::array<digit_t, N>& p) {
 // Check if 2p overflows N words
 template<size_t N>
 constexpr bool compute_2p_overflow(const std::array<digit_t, N>& p) {
-    return (bitsize(p) > N * RADIX);
+    return (bitsize(p) >= N * RADIX);
 }
 
 // Check if 3p overflows N words

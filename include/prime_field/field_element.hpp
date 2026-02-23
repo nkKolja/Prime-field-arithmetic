@@ -44,11 +44,11 @@ public:
     // Constructors
     constexpr FieldElement() : data{} {}
     
-    explicit FieldElement(std::array<digit_t, NWORDS>& arr) {
+    explicit FieldElement(const std::array<digit_t, NWORDS>& arr) {
         to_montgomery(*this, arr);
     }
 
-    explicit FieldElement(digit_t value) {
+    explicit FieldElement(const digit_t value) {
         FieldElement<Prime> temp_0, r2;
         r2.data = Prime::R2;
         temp_0.data[0] = value;

@@ -53,8 +53,9 @@ void add(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
     digit_t carry;
 
     carry = 0;
-    for(size_t i = 0; i < NWORDS; i++)
-        addc(out.data[i], carry, in1.data[i], in2.data[i]);
+    // for(size_t i = 0; i < NWORDS; i++)
+    //     addc(out.data[i], carry, in1.data[i], in2.data[i]);
+    mp_addc(out.data, carry, in1.data, in2.data);
 
     if constexpr (Prime::NBITS == NWORDS * RADIX){
         digit_t mask = 0 - carry;
@@ -221,6 +222,18 @@ void mul_fp2(
     add(out[0], t0, t1);
 }
 
+// Conditional select: out = (cond) ? in2 : in1 (constant-time)
+template<typename Prime>
+void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2, bool cond) {
+    mp::conditional_select(out.data, in1.data, in2.data, cond);
+}
+
+// Conditional swap: swaps a and b if cond != 0 (constant-time)
+template<typename Prime>
+void conditional_swap(FieldElement<Prime>& a, FieldElement<Prime>& b, bool cond) {
+    mp::conditional_swap(a.data, b.data, cond);
+}
+
 // Cipolla's square root finding algorithm
 template<typename Prime>
 void sqrt(FieldElement<Prime>& out, const FieldElement<Prime>& in) {
@@ -318,19 +331,6 @@ void from_montgomery(std::array<digit_t, Prime::NWORDS>& out, const FieldElement
     mul(result, in, Rinv);
     out = result.data;
 }
-
-// Conditional select: out = (cond) ? in2 : in1 (constant-time)
-template<typename Prime>
-void conditional_select(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2, bool cond) {
-    conditional_select(out.data, in1.data, in2.data, cond);
-}
-
-// Conditional swap: swaps a and b if cond != 0 (constant-time)
-template<typename Prime>
-void conditional_swap(FieldElement<Prime>& a, FieldElement<Prime>& b, bool cond) {
-    conditional_swap(a.data, b.data, cond);
-}
-
 
 template<typename Prime>
 bool random(FieldElement<Prime>& out) noexcept {

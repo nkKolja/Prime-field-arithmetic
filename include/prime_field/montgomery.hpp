@@ -69,22 +69,18 @@ constexpr void barrett_reduce(std::array<digit_t, Prime::NWORDS>& out, const std
     constexpr auto& p = Prime::p;
     constexpr auto barrett_mu = prime_field::montgomery::compute_barrett_mu<N, A>(p);
     constexpr auto barrett_appx_factor = prime_field::montgomery::compute_barrett_appx_factor<N, A>(p);
+    constexpr auto X = N - 1;
 
     if constexpr (N == 0) {
         return;
     }
 
-    if constexpr (N == 1) {
-        // TODO: Make constant time
-        mp_div_r<N, N + A>(out, in, p);
-        return;
-    }
 
-    std::array<digit_t, A + 1> temp_0 = {};
-    // std::array<digit_t, A + 1> temp_1 = {};      // barret_mu
-    // std::array<digit_t, 2*A + 2> temp_2 = {};    // t_0 * t_1 not needed
+    std::array<digit_t, A + N - X> temp_0 = {};
+    // std::array<digit_t, A + 1> temp_1 = {};              // barret_mu
+    // std::array<digit_t, N + 2*A + 1 - X> temp_2 = {};    // t_0 * t_1 not needed
     std::array<digit_t, A + 1> temp_3 = {};
-    // std::array<digit_t, N + 1> temp_4 = {};
+    // std::array<digit_t, N + A + 1> temp_4 = {};
 
     digit_t mask, borrow, carry;
 
