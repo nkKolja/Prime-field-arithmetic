@@ -11,8 +11,8 @@ int main() {
 
     std::cout << "  p   = " << P::p << "\n\n";
 
-    Fp a(123);
-    Fp b(456);
+    Fp a(1234);
+    Fp b(5678);
     Fp t0 = a + b;
     Fp t1 = a * b;    
     std::cout << "  a   = " << a << "\n";
