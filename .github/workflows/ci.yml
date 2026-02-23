@@ -23,9 +23,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ${{ matrix.compiler }}
 
-    - name: Build all tests
-      run: make -j$(nproc) CXX=${{ matrix.compiler }} test_build
-
-    - name: Run all tests
-      run: make test_all
+    - name: Build and run all tests
+      run: make CXX=${{ matrix.compiler }} test_all
 
