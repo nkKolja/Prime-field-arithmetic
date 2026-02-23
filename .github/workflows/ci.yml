@@ -7,22 +7,28 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        compiler: [g++-12]
+    name: Tests
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install compiler
+    - name: Install g++-12
       run: |
         sudo apt-get update
-        sudo apt-get install -y ${{ matrix.compiler }}
+        sudo apt-get install -y g++-12
 
-    - name: Build and run all tests
-      run: make CXX=${{ matrix.compiler }} test_all
+    - name: Primitives
+      run: make CXX=g++-12 test_primitives
+
+    - name: Multi-precision arithmetic
+      run: make CXX=g++-12 test_mp
+
+    - name: Montgomery / Barrett reduction
+      run: make CXX=g++-12 test_montgomery
+
+    - name: Field arithmetic (all primes)
+      run: make CXX=g++-12 test_field
 
