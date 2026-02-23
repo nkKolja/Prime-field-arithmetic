@@ -23,39 +23,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ${{ matrix.compiler }}
 
-    - name: Create build directory
-      run: mkdir -p build
+    - name: Build all tests
+      run: make -j$(nproc) CXX=${{ matrix.compiler }} test_build
 
-    - name: Build and run primitives test
-      run: |
-        ${{ matrix.compiler }} -std=c++20 -I./include -O3 -Wfatal-errors -o build/test_primitives tests/test_primitives.cpp
-        ./build/test_primitives
-
-    - name: Build and run MP library test
-      run: |
-        ${{ matrix.compiler }} -std=c++20 -I./include -O3 -Wfatal-errors -o build/test_mp tests/test_mp.cpp
-        ./build/test_mp
-
-    - name: Build and run Montgomery/Barrett test
-      run: |
-        ${{ matrix.compiler }} -std=c++20 -I./include -O3 -Wfatal-errors -o build/test_montgomery tests/test_montgomery.cpp
-        ./build/test_montgomery
-
-    - name: Build and run field element tests
-      run: |
-        PRIMES="p32_0 p64_0 p64_1 p128_0 p128_1 p192_0 p192_1 p256_0 p256_1 p512_0 p512_1"
-        for prime in $PRIMES; do
-          PRIME_UPPER=$(echo $prime | tr 'a-z' 'A-Z')
-          echo "Building field test for $prime..."
-          ${{ matrix.compiler }} -std=c++20 -I./include -O3 -Wfatal-errors -DPRIME_TYPE=${PRIME_UPPER} -o build/test_field_${prime} tests/test_field.cpp
-          echo "Running test_field_${prime}..."
-          ./build/test_field_${prime}
-        done
-
-    - name: Build and run legacy tests (via CMake)
-      run: |
-        cmake -S . -B build_cmake -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release
-        cmake --build build_cmake -j$(nproc)
-        cd build_cmake
-        ctest --output-on-failure --timeout 120
+    - name: Run all tests
+      run: make test_all
 

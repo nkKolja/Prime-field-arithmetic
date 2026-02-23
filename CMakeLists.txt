@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(PrimeFieldArithmetic CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -29,7 +29,7 @@ foreach(PRIME ${PRIMES})
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
     )
-    target_compile_features(prime_field_${PRIME} PUBLIC cxx_std_17)
+    target_compile_features(prime_field_${PRIME} PUBLIC cxx_std_20)
 endforeach()
 
 # Create lib directory and copy static libraries after build
