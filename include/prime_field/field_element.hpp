@@ -41,6 +41,20 @@ public:
     static constexpr size_t NWORDS = Prime::NWORDS;
     static constexpr size_t NBITS = Prime::NBITS;
     std::array<digit_t, NWORDS> data;
+
+    static FieldElement random() {
+        return prime_field::random<Prime>();
+    }
+
+    static constexpr FieldElement zero() {
+        return FieldElement{};
+    }
+
+    static constexpr FieldElement one() {
+        FieldElement f{};
+        f.data = Prime::Mont_one;
+        return f;
+    }
     
     // Constructors
     constexpr FieldElement() : data{} {}
@@ -101,12 +115,15 @@ public:
 
     
     FieldElement operator/(const FieldElement& other) const {
-        FieldElement inv_other = other.inverse();
-        return *this * inv_other;
+        FieldElement result;
+        div(result, *this, other);
+        return result;
     }
+
     FieldElement& operator/=(const FieldElement& other) {
-        *this = *this / other;
-        return *this;
+        FieldElement result;
+        div(result, *this, other);
+        return *this = result;
     }
     
     

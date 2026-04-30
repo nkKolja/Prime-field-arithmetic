@@ -53,6 +53,13 @@ foreach(PRIME ${PRIMES})
     target_compile_definitions(test_${PRIME} PRIVATE PRIME_TYPE=${PRIME_UPPER})
     add_test(NAME test_${PRIME} COMMAND test_${PRIME})
     set_tests_properties(test_${PRIME} PROPERTIES TIMEOUT 120)
+
+    # Factory-pattern test variant
+    add_executable(test_factory_${PRIME} tests/test_factory.cpp)
+    target_link_libraries(test_factory_${PRIME} prime_field_${PRIME})
+    target_compile_definitions(test_factory_${PRIME} PRIVATE PRIME_TYPE=${PRIME_UPPER})
+    add_test(NAME test_factory_${PRIME} COMMAND test_factory_${PRIME})
+    set_tests_properties(test_factory_${PRIME} PROPERTIES TIMEOUT 120)
 endforeach()
 
 # Create benchmark executables for each prime (linking against static libs)

@@ -124,6 +124,7 @@ void mul(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
             digit_t q = temp_c[0] * nip_0;
 
             mp_mul_digit(temp_0, p, q);
+            mp_add(temp_0, temp_0, temp_c);
             mp_add_and_divide<N + 1, N + 1, N + 1>(temp_c, temp_c, temp_0);
         }
 
@@ -142,6 +143,7 @@ void mul(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldEl
             digit_t q = temp_c[0] * nip_0;
 
             mp_mul_digit(temp_0, p, q);
+            mp_add(temp_0, temp_0, temp_0);
             mp_add_and_divide<N + 2, N + 2, N + 1>(temp_c, temp_c, temp_0);
         }
 
@@ -192,6 +194,13 @@ template<typename Prime>
 void inv(FieldElement<Prime>& b, const FieldElement<Prime>& a) {
     // Fermat's little theorem: a^(p-2) mod p
     pow<Prime, Prime::NWORDS>(b, a, Prime::pm2);
+}
+
+template<typename Prime>
+void div(FieldElement<Prime>& out, const FieldElement<Prime>& in1, const FieldElement<Prime>& in2) {
+    FieldElement<Prime> inv_in2;
+    inv(inv_in2, in2);
+    mul(out, in1, inv_in2);
 }
 
 

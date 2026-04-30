@@ -89,6 +89,17 @@ constexpr std::array<digit_t, N> compute_iR(const std::array<digit_t, N>& p) {
 }
 
 
+// Compute p-1
+template<size_t N>
+constexpr std::array<digit_t, N> compute_pm1(const std::array<digit_t, N>& p) {
+    std::array<digit_t, N> one = {};    one[0] = 1;
+    std::array<digit_t, N> temp = {};
+    std::array<digit_t, N> out = {};
+
+    mp_sub<N, N, N>(out, p, one);
+    return out;
+}
+
 // Compute (p-1)/2
 template<size_t N>
 constexpr std::array<digit_t, N> compute_pm1_half(const std::array<digit_t, N>& p) {
@@ -96,7 +107,6 @@ constexpr std::array<digit_t, N> compute_pm1_half(const std::array<digit_t, N>& 
     std::array<digit_t, N> temp = {};
     std::array<digit_t, N> out = {};
 
-    //Technically unnecessary to compute p-1 first but it makes it easier to read
     mp_sub<N, N, N>(temp, p, one);
     rshift<N, N>(out, temp, 1);
     return out;
@@ -220,6 +230,7 @@ struct PrimeParameters {
     static constexpr std::array<digit_t, NWORDS> nip = compute_nip(p);
     static constexpr std::array<digit_t, NWORDS> ip = compute_ip(p);
     static constexpr std::array<digit_t, NWORDS> iR = compute_iR(p);
+    static constexpr std::array<digit_t, NWORDS> pm1 = compute_pm1(p);
     static constexpr std::array<digit_t, NWORDS> pm1_half = compute_pm1_half(p);
     static constexpr std::array<digit_t, NWORDS> pp1_half = compute_pp1_half(p);
     static constexpr std::array<digit_t, NWORDS> pp1_quarter = compute_pp1_quarter(p);

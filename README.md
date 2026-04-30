@@ -24,7 +24,7 @@ make example
 - **Hybrid distribution** - pre-compiled static libraries for fast compilation, or header-only for custom primes
 - **Pre-configured primes** - Optimised primes from 32 to 512 bits (11 total)
 - **Field operations** - add, sub, neg, mul, inv, div, pow, legendre, sqrt
-- **Random** - random distribution l1 distance from uniform < 2^(-128)
+- **Random** - random distribution with l1 distance from uniform < 2^(-128)
 
 ## Requirements
 
