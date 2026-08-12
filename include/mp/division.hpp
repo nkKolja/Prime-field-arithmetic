@@ -273,6 +273,7 @@ MP_FORCE_INLINE constexpr void mp_div_qr(
             for (size_t i = 0; i < N; i++) {
                 addc(dividend[j + i], carry, dividend[j + i], divisor[i]);
             }
+            addc(dividend[j + N], carry, dividend[j + N], 0);
         }
     }
 
@@ -459,6 +460,7 @@ MP_FORCE_INLINE constexpr void mp_fdiv_21_qr(
             for (size_t i = 0; i < N; i++) {
                 addc(dividend[j + i], carry, dividend[j + i], divisor[i]);
             }
+            addc(dividend[j + N], carry, dividend[j + N], 0);
         }
     }
 
@@ -592,6 +594,7 @@ MP_FORCE_INLINE constexpr void mp_div_21_qr(
             for (size_t i = 0; i < N; i++) {
                 addc(dividend[j + i], carry, dividend[j + i], divisor[i]);
             }
+            addc(dividend[j + N], carry, dividend[j + N], 0);
         }
     }
 

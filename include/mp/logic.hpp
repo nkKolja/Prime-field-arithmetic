@@ -296,8 +296,8 @@ Example: bitsize(0b1011) = 4, bitsize(0b1) = 1, bitsize(0) = 0 */
 MP_FORCE_INLINE constexpr size_t bitsize(digit_t x) {
     if (x == 0) return 0;
 #if defined(__GNUC__) || defined(__clang__)
-    // Use compiler builtin for count leading zeros
-    return RADIX - __builtin_clzll(x);
+    // Use compiler builtin for count leading zeros.
+    return RADIX - (__builtin_clzll(static_cast<unsigned long long>(x)) - (64 - RADIX));
 #else
     // Fallback: binary search for MSB
     size_t n = 0;
